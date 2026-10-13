@@ -11,6 +11,13 @@ Parameters:
     Default: jeandirel/aeromro-agentic-copilot
     AllowedPattern: "[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
     Description: owner/name of the only repository allowed to deploy
+  GitHubRepositoryWithIds:
+    Type: String
+    Default: jeandirel@86200256/aeromro-agentic-copilot@1417188624
+    AllowedPattern: "[A-Za-z0-9_.-]+@[0-9]+/[A-Za-z0-9_.-]+@[0-9]+"
+    Description: >-
+      Same repository in GitHub's immutable form owner@ownerId/name@repositoryId. Repositories
+      created or renamed after 15 July 2026 sign their OIDC tokens with this form.
   CreateGitHubOidcProvider:
     Type: String
     Default: "true"
@@ -152,10 +159,14 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              # Both subject formats: classic (repo:owner/name) and immutable IDs
+              # (repo:owner@id/name@id), used by GitHub for repositories created after 15 July 2026.
               StringLike:
                 token.actions.githubusercontent.com:sub:
                   - !Sub repo:${GitHubRepository}:ref:refs/heads/main
                   - !Sub repo:${GitHubRepository}:environment:production
+                  - !Sub repo:${GitHubRepositoryWithIds}:ref:refs/heads/main
+                  - !Sub repo:${GitHubRepositoryWithIds}:environment:production
       Policies:
         - PolicyName: deploy
           PolicyDocument:
