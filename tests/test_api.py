@@ -93,7 +93,8 @@ def test_ask_returns_answer_policy_and_usage(deployed):
     client = make_client(deployed)
     unit = client.get("/fleets/FD001/engines").json()["engines"][0]["unit"]
     body = client.post("/ask", json={"subset": "FD001", "unit": unit, "question": "Status?"}).json()
-    assert body["answer"].startswith("[offline mock]")
+    assert body["answer"].startswith("[summary without language model]")
+    assert body["fallback_reason"] is None
     assert body["policy"]["action"] in {"estimate_rul", "recommend_inspection"}
     assert isinstance(body["requires_approval"], bool)
     assert body["usage"]["input_tokens"] > 0

@@ -32,7 +32,7 @@ from aeromro.fleet import (
 )
 from aeromro.harness import ActionPolicy, Decision, TelemetryTracker
 from aeromro.harness.gateway import ToolGateway
-from aeromro.llm import LLMClient, Message, MockLLMClient, build_llm_client
+from aeromro.llm import FallbackLLMClient, LLMClient, Message, MockLLMClient, build_llm_client
 from aeromro.tools.fleet_server import build_fleet_server
 
 SYSTEM_PROMPT = """You are AeroMRO, a decision-support assistant for turbofan engine maintenance.
@@ -79,16 +79,30 @@ def client_id(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def mock_responder(messages: list[Message]) -> str:
-    """Offline stand-in for the LLM: a deterministic summary of the FACTS block."""
+STATUS_TEXT = {
+    "inspect_now": "inspect before the next flight",
+    "plan_inspection": "plan an inspection at the next maintenance opportunity",
+    "healthy": "no action, keep monitoring",
+}
+
+
+def facts_summary(messages: list[Message]) -> str:
+    """Answer built from the FACTS block without a language model (offline mode and fallback)."""
     match = re.search(r"FACTS:\n(\{.*\})", messages[-1].content, re.S)
     facts = json.loads(match.group(1)) if match else {}
     a = facts.get("engine", {})
     p = facts.get("policy", {})
+    review = (
+        " A maintenance engineer must review this recommendation before any action."
+        if p.get("decision") == "require_approval"
+        else ""
+    )
     return (
-        f"[offline mock] Engine {a.get('unit')} of {a.get('subset')}: about {a.get('rul')} cycles "
-        f"left (80 % interval {a.get('rul_low')} to {a.get('rul_high')}), status "
-        f"{a.get('status')}, policy decision {p.get('decision')}."
+        f"[summary without language model] Engine {a.get('unit')} of {a.get('subset')} has flown "
+        f"{a.get('cycles_flown')} cycles. Estimated remaining useful life: {a.get('rul')} cycles "
+        f"(80 % interval {a.get('rul_low')} to {a.get('rul_high')}). Status: "
+        f"{STATUS_TEXT.get(a.get('status'), a.get('status'))} (confidence {a.get('confidence')})."
+        f"{review} Simulated data (NASA C-MAPSS), decision support only."
     )
 
 
@@ -101,10 +115,11 @@ def create_app(
     thresholds = Thresholds(settings.inspect_now_cycles, settings.plan_inspection_cycles)
     fleet = fleet or FleetService(settings.data_dir, settings.models_dir, thresholds)
     if llm is None:
+        offline = MockLLMClient(responder=facts_summary, latency_ms=0.0, model="facts-summary")
         llm = (
-            MockLLMClient(responder=mock_responder)
+            offline
             if settings.llm_provider == "mock"
-            else build_llm_client(settings)
+            else FallbackLLMClient(build_llm_client(settings), offline)
         )
     policy = ActionPolicy(min_confidence=settings.min_recommendation_confidence)
     limiter = RateLimiter(settings.ask_rate_limit_per_minute)
@@ -273,6 +288,7 @@ def create_app(
             "engine": assessment.as_dict(),
             "policy": facts["policy"],
             "requires_approval": decision.decision is not Decision.ALLOW,
+            "fallback_reason": response.fallback_reason,
             "usage": {
                 "model": response.model,
                 "input_tokens": summary.input_tokens,

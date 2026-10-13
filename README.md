@@ -95,7 +95,8 @@ local clients and over Streamable HTTP at `/mcp` by the API (stateless, so it ru
 
 A first slice of the product, to be online before the agents exist: fleet status, engine
 details and an explanation by a Bedrock model, guarded by the harness (policy decision, token cap,
-rate limit, optional access code). Infrastructure as code with CloudFormation, deployment from
+rate limit, optional access code). If the model is unavailable, a fallback answers from the same
+facts and a circuit breaker stops calling it for a while. Infrastructure as code with CloudFormation, deployment from
 GitHub Actions through OpenID Connect (no AWS keys stored), least-privilege role with a
 permissions boundary, model registry on S3, container on AWS Lambda, CloudWatch alarms and
 dashboard. Details and API reference in [docs/deployment.md](docs/deployment.md).
@@ -119,7 +120,7 @@ uvicorn aeromro.api.app:app --reload     # http://127.0.0.1:8000/docs, offline m
   labels (clipped at 125 cycles by default).
 - **Dataset download with checksum verification** (`aeromro.data.download`): the NASA files are
   accepted only if identical to the ones the results were produced with.
-- **Quality**: 86 tests, ruff, GitHub Actions on Python 3.11 and 3.12; CI also builds and
+- **Quality**: 92 tests, ruff, GitHub Actions on Python 3.11 and 3.12; CI also builds and
   starts the Lambda image; a manual workflow downloads the data, retrains and publishes the models.
 
 ```console
