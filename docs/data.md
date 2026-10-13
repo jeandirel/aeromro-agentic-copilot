@@ -17,7 +17,27 @@ NASA Prognostics Center of Excellence.
 | FD001 | 100 | 100 | 1 (sea level) | 1 (HPC degradation) |
 | FD002 | 260 | 259 | 6 | 1 (HPC degradation) |
 | FD003 | 100 | 100 | 1 (sea level) | 2 (HPC and fan degradation) |
-| FD004 | 248 | 249 | 6 | 2 (HPC and fan degradation) |
+| FD004 | 249 | 248 | 6 | 2 (HPC and fan degradation) |
+
+The engine counts above are counted in the files. The official readme announces 248 training and
+249 test engines for FD004; the files contain the reverse (249 and 248, and `RUL_FD004.txt` has 248
+lines), so the readme swaps the two numbers.
+
+### Getting the files
+
+```bash
+python -m aeromro.data.download --dest data/raw/CMAPSSData           # from NASA
+python -m aeromro.data.download --dest data/raw/CMAPSSData --verify-only
+```
+
+The script downloads the archive, extracts the 12 data files (looking inside a nested archive if
+there is one) and checks each against the SHA-256 checksum of the files used for the published
+results. Checksums are computed after normalising line endings, so a copy saved on Windows still
+passes, while any changed value is rejected. Copies found elsewhere (Kaggle, IEEE DataPort, GitHub
+mirrors) can be used with `--from-zip` and are accepted only if they are byte-identical in content.
+The results in this repository were produced with files that pass this check.
+
+### Layout
 
 Each row is one operating cycle of one engine, 26 space-separated columns: engine unit, cycle,
 3 operational settings, 21 sensor measurements. Training engines run until failure; test series
@@ -30,8 +50,7 @@ stop earlier, and `RUL_FD00X.txt` gives the true remaining useful life (RUL) at 
   measurable degradation);
 - test: `RUL = final RUL from RUL_FD00X.txt + cycles still to come`.
 
-Evaluation (step 2) uses the usual metrics for this dataset: RMSE on the last cycle of each test
-engine and the asymmetric PHM08 score, which penalises late predictions more than early ones.
+The RUL model and its evaluation are described in the [model card](model_card_rul.md).
 
 ## Regulatory corpus (RAG)
 

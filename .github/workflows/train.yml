@@ -1,0 +1,38 @@
+name: Train RUL model
+
+# Manual run: downloads NASA C-MAPSS, checks every file against its checksum, trains and evaluates
+# the four subsets, and publishes the models and the evaluation report as build artefacts.
+on:
+  workflow_dispatch:
+    inputs:
+      data_url:
+        description: "C-MAPSS archive URL"
+        required: false
+        default: "https://data.nasa.gov/docs/legacy/CMAPSSData.zip"
+
+permissions:
+  contents: read
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e .
+      - name: Download and verify the dataset
+        run: python -m aeromro.data.download --dest data/raw/CMAPSSData --url "${{ inputs.data_url }}"
+      - name: Train and evaluate
+        run: python -m aeromro.rul.train --data-dir data/raw/CMAPSSData --out models --report reports/rul_results.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rul-models
+          path: |
+            models/
+            reports/rul_results.json
+          retention-days: 30
