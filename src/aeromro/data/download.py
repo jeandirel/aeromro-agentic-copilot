@@ -11,13 +11,19 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import io
+import sys
+import time
 import urllib.request
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 NASA_URL = "https://data.nasa.gov/docs/legacy/CMAPSSData.zip"
+# Public copy of the same files, used only if NASA is unreachable; checksums are enforced.
+MIRROR_URL = "https://raw.githubusercontent.com/edwardzjl/CMAPSSData/master/"
 
 # SHA-256 of each file after normalising line endings to "\n".
 CHECKSUMS = {
@@ -93,16 +99,58 @@ def verify_directory(directory: Path) -> dict[str, bool]:
     return status
 
 
-def download(url: str = NASA_URL, timeout: float = 120.0) -> bytes:
+def fetch(
+    url: str,
+    *,
+    timeout: float = 120.0,
+    attempts: int = 3,
+    backoff_s: float = 5.0,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+    sleep: Callable[[float], None] = time.sleep,
+) -> bytes:
+    """GET with retries and exponential backoff; the last error is raised if every attempt fails."""
     request = urllib.request.Request(url, headers={"User-Agent": "aeromro-agentic-copilot"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 (fixed https URL)
-        return response.read()
+    for attempt in range(1, attempts + 1):
+        try:
+            with opener(request, timeout=timeout) as response:
+                return response.read()
+        except (OSError, http.client.HTTPException) as exc:  # URLError and timeouts are OSError
+            if attempt == attempts:
+                raise
+            wait = backoff_s * 2 ** (attempt - 1)
+            print(f"attempt {attempt} failed ({exc}); retrying in {wait:.0f} s", file=sys.stderr)
+            sleep(wait)
+    raise AssertionError("unreachable")
+
+
+def download(url: str = NASA_URL, **kwargs: Any) -> bytes:
+    return fetch(url, **kwargs)
+
+
+def download_from_mirror(base_url: str, dest: Path, **kwargs: Any) -> list[Path]:
+    """Fetch the 12 files one by one from a mirror; each must match its checksum."""
+    contents = {name: fetch(base_url.rstrip("/") + "/" + name, **kwargs) for name in CHECKSUMS}
+    bad = [n for n, data in contents.items() if normalised_sha256(data) != CHECKSUMS[n]]
+    if bad:
+        raise ValueError(f"checksum mismatch from mirror: {', '.join(sorted(bad))}")
+    dest.mkdir(parents=True, exist_ok=True)
+    written = []
+    for name, data in sorted(contents.items()):
+        path = dest / name
+        path.write_bytes(data.replace(b"\r\n", b"\n"))
+        written.append(path)
+    return written
 
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Download and verify NASA C-MAPSS.")
     parser.add_argument("--dest", type=Path, default=Path("data/raw/CMAPSSData"))
     parser.add_argument("--url", default=NASA_URL, help="archive URL (default: NASA)")
+    parser.add_argument(
+        "--mirror",
+        default=MIRROR_URL,
+        help="files used if the NASA download fails (checksums still enforced); '' to disable",
+    )
     parser.add_argument("--from-zip", type=Path, help="use a local copy of CMAPSSData.zip")
     parser.add_argument("--verify-only", action="store_true", help="check files already in --dest")
     args = parser.parse_args(argv)
@@ -113,8 +161,17 @@ def main(argv: list[str] | None = None) -> None:
             print(f"{'ok ' if ok else 'BAD'} {name}")
         raise SystemExit(0 if all(status.values()) else 1)
 
-    content = args.from_zip.read_bytes() if args.from_zip else download(args.url)
-    for path in extract_verified(content, args.dest):
+    if args.from_zip:
+        written = extract_verified(args.from_zip.read_bytes(), args.dest)
+    else:
+        try:
+            written = extract_verified(download(args.url), args.dest)
+        except (OSError, http.client.HTTPException, zipfile.BadZipFile) as exc:
+            if not args.mirror:
+                raise
+            print(f"NASA download failed ({exc}); using the mirror", file=sys.stderr)
+            written = download_from_mirror(args.mirror, args.dest)
+    for path in written:
         print(f"ok  {path}")
 
 
