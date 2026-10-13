@@ -19,6 +19,11 @@ sources, and **never takes a safety decision on its own**: risky actions wait fo
 > are on the [roadmap](#roadmap). This README only describes what exists, and is updated at each
 > step.
 
+**Live API** (AWS Lambda, Paris region):
+[interactive documentation](https://ozvpsrbzfruwnw3ibk33m4vve40libtc.lambda-url.eu-west-3.on.aws/docs) ·
+[fleet status](https://ozvpsrbzfruwnw3ibk33m4vve40libtc.lambda-url.eu-west-3.on.aws/fleets) ·
+[one engine](https://ozvpsrbzfruwnw3ibk33m4vve40libtc.lambda-url.eu-west-3.on.aws/fleets/FD001/engines/81?history=10)
+
 ## What it demonstrates
 
 | Topic | How |
