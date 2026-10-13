@@ -14,9 +14,10 @@ To answer, a team of agents combines **engine sensor data** (remaining useful li
 NASA C-MAPSS dataset) with **regulatory documents** (retrieval over public FAA texts), cites its
 sources, and **never takes a safety decision on its own**: risky actions wait for a human.
 
-> **Status: step 2 of 7.** The foundations and the engine-health model below are built, tested
-> and measured; the agents, protocols and AWS deployment are on the [roadmap](#roadmap). This
-> README only describes what exists, and is updated at each step.
+> **Status: step 2 of 7, deployment pipeline ready.** The foundations, the engine-health model
+> and a first API with its AWS deployment pipeline are built and tested; the agents and protocols
+> are on the [roadmap](#roadmap). This README only describes what exists, and is updated at each
+> step.
 
 ## What it demonstrates
 
@@ -70,6 +71,20 @@ RMSE, baselines, latency (about 40 ms per engine) and limits are in the
 [model card](docs/model_card_rul.md); the raw figures are in
 [reports/rul_results.json](reports/rul_results.json).
 
+### API and AWS deployment pipeline (towards step 6, deployed early)
+
+A first slice of the product, to be online before the agents exist: fleet status, engine
+details and an explanation by a Bedrock model, guarded by the harness (policy decision, token cap,
+rate limit, optional access code). Infrastructure as code with CloudFormation, deployment from
+GitHub Actions through OpenID Connect (no AWS keys stored), least-privilege role with a
+permissions boundary, model registry on S3, container on AWS Lambda, CloudWatch alarms and
+dashboard. Details and API reference in [docs/deployment.md](docs/deployment.md).
+
+```bash
+pip install -e ".[api]"
+uvicorn aeromro.api.app:app --reload     # http://127.0.0.1:8000/docs, offline mock LLM
+```
+
 ### Foundations (step 1)
 
 - **One LLM interface, two implementations** (`aeromro.llm`): a deterministic mock, so tests and
@@ -84,12 +99,12 @@ RMSE, baselines, latency (about 40 ms per engine) and limits are in the
   labels (clipped at 125 cycles by default).
 - **Dataset download with checksum verification** (`aeromro.data.download`): the NASA files are
   accepted only if identical to the ones the results were produced with.
-- **Quality**: 58 tests (95 % coverage), ruff, GitHub Actions on Python 3.11 and 3.12, Docker
-  image, and a manual workflow that downloads the data, retrains and publishes the models.
+- **Quality**: 78 tests, ruff, GitHub Actions on Python 3.11 and 3.12; CI also builds and
+  starts the Lambda image; a manual workflow downloads the data, retrains and publishes the models.
 
 ```console
 $ python -m aeromro
-aeromro-agentic-copilot 0.2.0
+aeromro-agentic-copilot 0.3.0
 llm provider : mock
 action policy:
   READ      estimate_rul           -> allow
@@ -142,6 +157,8 @@ The dataset is not stored in the repository; see [docs/data.md](docs/data.md).
 - [ ] **5. AG-UI interface**: live stream of reasoning steps, tool calls and approval requests
 - [ ] **6. AWS deployment and evaluation**: Lambda, Bedrock, S3, CloudWatch as code; evaluation
   set (answer quality, citation accuracy, tool-call accuracy); cost and latency report
+  - [x] deployment pipeline: bootstrap and app templates, OIDC, model registry, deploy workflow
+  - [ ] first deployment, evaluation set, cost and latency report
 - [ ] **7. Results**: measured figures, limits, demo
 
 ## Project layout
@@ -151,10 +168,13 @@ src/aeromro/
   config.py          settings from AEROMRO_* environment variables
   llm/               LLM interface, mock client, Bedrock Converse client
   harness/           action policy, cost and latency telemetry
+  api/               HTTP API (FastAPI)
+  fleet.py           in-service fleet: RUL, interval, status and confidence per engine
   data/              NASA C-MAPSS loader, RUL labels, verified download
   rul/               features, RUL model with interval, metrics, training and evaluation
 tests/               unit tests (no network, no AWS account needed)
-docs/                architecture, data sources, model card, architecture decision records
+infra/               CloudFormation: account bootstrap and application stack
+docs/                architecture, deployment, data sources, model card, decision records
 reports/             evaluation results (JSON)
 ```
 

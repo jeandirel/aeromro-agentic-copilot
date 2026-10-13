@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """All tunables in one place, so a deployment only changes environment variables."""
 
-    model_config = SettingsConfigDict(env_prefix="AEROMRO_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="AEROMRO_", env_file=".env", extra="ignore", env_ignore_empty=True
+    )
 
     llm_provider: Literal["mock", "bedrock"] = "mock"
     # Model availability differs per account and region; set it explicitly (see .env.example).
@@ -30,6 +33,27 @@ class Settings(BaseSettings):
 
     min_recommendation_confidence: float = Field(default=0.7, ge=0.0, le=1.0)
     rul_clip_cycles: int = Field(default=125, gt=0)
+
+    # Fleet service: in-service engines (C-MAPSS test files) and trained models.
+    data_dir: Path = Path("data/raw/CMAPSSData")
+    models_dir: Path = Path("models")
+
+    # Maintenance thresholds (cycles) used to turn an RUL interval into a status.
+    inspect_now_cycles: int = Field(default=15, gt=0)
+    plan_inspection_cycles: int = Field(default=50, gt=0)
+
+    # Public demo guards. When an access code is set, LLM endpoints require it in the
+    # X-Access-Code header. The rate limit is per client IP and per running instance.
+    demo_access_code: SecretStr | None = None
+    ask_rate_limit_per_minute: int = Field(default=10, gt=0)
+    ask_max_tokens: int = Field(default=400, gt=0, le=4096)
+    cors_origins: str = "*"
+
+    @field_validator("demo_access_code", mode="before")
+    @classmethod
+    def _empty_code_means_none(cls, value: object) -> object:
+        # Deployment templates pass "" when no code is configured.
+        return None if value in ("", None) else value
 
 
 @lru_cache

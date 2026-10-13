@@ -1,7 +1,7 @@
 .PHONY: install lint format test docker run
 
 install:
-	pip install -e ".[dev]"
+	pip install -e ".[dev,api]"
 	pre-commit install || true
 
 lint:

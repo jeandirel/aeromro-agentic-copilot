@@ -1,3 +1,3 @@
 """AeroMRO Agentic Copilot: agents that help maintenance engineers reason about engine health."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
