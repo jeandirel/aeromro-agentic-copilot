@@ -103,6 +103,8 @@ jobs:
               "DemoAccessCode=${DEMO_ACCESS_CODE}" \
               "CorsOrigins=${CORS_ORIGINS}"
       - name: Smoke test
+        env:
+          DEMO_ACCESS_CODE: ${{ secrets.AEROMRO_DEMO_ACCESS_CODE }}
         run: |
           URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
@@ -110,11 +112,24 @@ jobs:
           echo "API_URL=${URL}" >> "$GITHUB_ENV"
           for i in 1 2 3 4 5; do curl -fsS "${URL}/health" && break || sleep 10; done
           curl -fsS "${URL}/fleets/FD001/engines?status=inspect_now" | head -c 600; echo
+          # MCP endpoint: one tool call through the harness gateway.
+          curl -fsS -X POST "${URL}/mcp" -H "Content-Type: application/json" \
+            -H "Accept: application/json, text/event-stream" -H "Mcp-Protocol-Version: 2025-06-18" \
+            -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "estimate_rul", "arguments": {"subset": "FD001", "unit": 81}}}' \
+            | python -c "import json,sys; r=json.load(sys.stdin)['result']; assert not r['isError'], r; print('mcp ok', r['structuredContent']['engine'])"
+          # /ask answers either from the model or from the fallback, never with an error.
+          ASK=$(curl -fsS -X POST "${URL}/ask" -H "Content-Type: application/json" \
+            -H "X-Access-Code: ${DEMO_ACCESS_CODE}" \
+            -d '{"subset": "FD001", "unit": 81, "question": "Should this engine be inspected?"}')
+          echo "$ASK" | python -c "import json,sys; b=json.load(sys.stdin); print('ask ok, model:', b['usage']['model'], '| fallback:', b['fallback_reason']); print(b['answer'][:300])"
+          FALLBACK=$(echo "$ASK" | python -c "import json,sys; print(json.load(sys.stdin)['fallback_reason'] or 'none')")
+          echo "LLM_FALLBACK=${FALLBACK}" >> "$GITHUB_ENV"
           {
             echo "### Deployed"
             echo "- API: ${URL}"
             echo "- Image: \`${IMAGE}\`"
             echo "- Models: \`${MODEL_VERSION}\`"
+            echo "- Language model fallback: \`${FALLBACK}\` (none means Bedrock answered)"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Record the deployment on GitHub (link shown on the repository page)
         env:
@@ -126,5 +141,6 @@ jobs:
             | gh api "repos/${GITHUB_REPOSITORY}/deployments" --input - --jq .id)
           jq -n --arg url "$API_URL" \
             --arg log "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            '{state: "success", environment_url: $url, log_url: $log}' \
+            --arg desc "smoke test passed; LLM fallback: ${LLM_FALLBACK:-unknown}" \
+            '{state: "success", environment_url: $url, log_url: $log, description: $desc}' \
             | gh api "repos/${GITHUB_REPOSITORY}/deployments/${ID}/statuses" --input -
