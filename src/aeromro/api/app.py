@@ -11,6 +11,8 @@ import re
 import secrets
 import time
 from collections import defaultdict, deque
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
@@ -29,7 +31,9 @@ from aeromro.fleet import (
     UnknownSubsetError,
 )
 from aeromro.harness import ActionPolicy, Decision, TelemetryTracker
+from aeromro.harness.gateway import ToolGateway
 from aeromro.llm import LLMClient, Message, MockLLMClient, build_llm_client
+from aeromro.tools.fleet_server import build_fleet_server
 
 SYSTEM_PROMPT = """You are AeroMRO, a decision-support assistant for turbofan engine maintenance.
 Rules:
@@ -105,18 +109,42 @@ def create_app(
     policy = ActionPolicy(min_confidence=settings.min_recommendation_confidence)
     limiter = RateLimiter(settings.ask_rate_limit_per_minute)
 
+    # MCP tool server over Streamable HTTP at /mcp: stateless and JSON-only, so any Lambda
+    # instance can answer any request. Same fleet and same harness gateway as the HTTP API.
+    gateway = ToolGateway(policy)
+    mcp_server = build_fleet_server(fleet, gateway, caller="mcp-http")
+    mcp_app = mcp_server.streamable_http_app(
+        stateless_http=True, json_response=True, host="0.0.0.0"
+    )
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        async with mcp_server.session_manager.run():
+            yield
+
     app = FastAPI(
         title="AeroMRO Agentic Copilot API",
         version=__version__,
         description="Engine health of a simulated turbofan fleet (NASA C-MAPSS). "
-        "Decision support only, not for airworthiness decisions.",
+        "Decision support only, not for airworthiness decisions. "
+        "MCP tools are served at /mcp (Streamable HTTP).",
+        lifespan=lifespan,
     )
+    app.state.gateway = gateway
+    app.state.mcp_server = mcp_server
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "X-Access-Code"],
+        allow_headers=[
+            "Content-Type",
+            "Accept",
+            "X-Access-Code",
+            "Mcp-Session-Id",
+            "Mcp-Protocol-Version",
+        ],
+        expose_headers=["Mcp-Session-Id"],
     )
 
     def require_subset(subset: str) -> str:
@@ -254,6 +282,24 @@ def create_app(
             },
         }
 
+    @app.get("/audit")
+    def audit(limit: Annotated[int, Query(ge=1, le=200)] = 50) -> list[dict[str, Any]]:
+        """Latest tool calls seen by the harness on this instance (most recent first)."""
+        records = list(gateway.records)[-limit:][::-1]
+        return [
+            {
+                "at": r.at,
+                "tool": r.tool,
+                "decision": r.decision,
+                "reason": r.reason,
+                "caller": r.caller,
+                "engine": {k: r.arguments.get(k) for k in ("subset", "unit")},
+            }
+            for r in records
+        ]
+
+    # Last: everything the routes above do not handle goes to the MCP app (it serves /mcp).
+    app.mount("/", mcp_app)
     return app
 
 

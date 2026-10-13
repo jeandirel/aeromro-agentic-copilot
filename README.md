@@ -71,6 +71,26 @@ RMSE, baselines, latency (about 40 ms per engine) and limits are in the
 [model card](docs/model_card_rul.md); the raw figures are in
 [reports/rul_results.json](reports/rul_results.json).
 
+### MCP tool server (step 3, first half)
+
+The fleet is exposed as **MCP tools** that any MCP client or agent can call, each call going
+through the harness gateway (policy check and audit record):
+
+| Tool | What it returns | Harness |
+| --- | --- | --- |
+| `list_engines` | in-service engines of a fleet, most urgent first | read, allowed |
+| `read_engine_telemetry` | recent RUL estimates and key sensors of one engine | read, allowed |
+| `estimate_rul` | RUL, 80 % interval, status, model test accuracy | read, allowed |
+| `recommend_inspection` | recommendation and the policy decision on it | human review below 0.7 confidence |
+| `draft_work_order` | a draft, never issued | always waits for human approval |
+
+Typed inputs (the four fleets are an enum) and typed, structured outputs. Served over stdio for
+local clients and over Streamable HTTP at `/mcp` by the API (stateless, so it runs on Lambda).
+
+```json
+{ "mcpServers": { "aeromro-fleet": { "command": "python", "args": ["-m", "aeromro.tools.fleet_server"] } } }
+```
+
 ### API and AWS deployment pipeline (towards step 6, deployed early)
 
 A first slice of the product, to be online before the agents exist: fleet status, engine
@@ -99,12 +119,12 @@ uvicorn aeromro.api.app:app --reload     # http://127.0.0.1:8000/docs, offline m
   labels (clipped at 125 cycles by default).
 - **Dataset download with checksum verification** (`aeromro.data.download`): the NASA files are
   accepted only if identical to the ones the results were produced with.
-- **Quality**: 78 tests, ruff, GitHub Actions on Python 3.11 and 3.12; CI also builds and
+- **Quality**: 86 tests, ruff, GitHub Actions on Python 3.11 and 3.12; CI also builds and
   starts the Lambda image; a manual workflow downloads the data, retrains and publishes the models.
 
 ```console
 $ python -m aeromro
-aeromro-agentic-copilot 0.3.0
+aeromro-agentic-copilot 0.4.0
 llm provider : mock
 action policy:
   READ      estimate_rul           -> allow
@@ -152,6 +172,8 @@ The dataset is not stored in the repository; see [docs/data.md](docs/data.md).
   baselines, RMSE and PHM08 score, model card
 - [ ] **3. MCP tool servers**: engine telemetry and RUL tools; regulation search with citations
   over public FAA documents
+  - [x] fleet tools over MCP (stdio and Streamable HTTP), behind the harness gateway with audit
+  - [ ] regulation search with citations
 - [ ] **4. Agents**: LangGraph orchestrator, engine health and compliance agents over A2A,
   harness wired into every tool call with human-approval interrupts
 - [ ] **5. AG-UI interface**: live stream of reasoning steps, tool calls and approval requests
@@ -167,7 +189,8 @@ The dataset is not stored in the repository; see [docs/data.md](docs/data.md).
 src/aeromro/
   config.py          settings from AEROMRO_* environment variables
   llm/               LLM interface, mock client, Bedrock Converse client
-  harness/           action policy, cost and latency telemetry
+  harness/           action policy, tool gateway with audit trail, cost and latency telemetry
+  tools/             MCP tool servers (fleet)
   api/               HTTP API (FastAPI)
   fleet.py           in-service fleet: RUL, interval, status and confidence per engine
   data/              NASA C-MAPSS loader, RUL labels, verified download
