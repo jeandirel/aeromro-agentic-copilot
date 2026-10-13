@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ipynb_checkpoints/
+
+# Secrets and local settings
+.env
+*.pem
+
+# Datasets and model artefacts are downloaded, never committed
+data/raw/
+data/processed/
+models/
+*.zip
+
+# Infrastructure state
+.aws-sam/
+cdk.out/
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
