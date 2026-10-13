@@ -24,7 +24,9 @@ set with the repository variable `AEROMRO_BEDROCK_MODEL_ID`.
 3. In CloudFormation, create the stack `aeromro-bootstrap` from [`infra/bootstrap.yaml`](../infra/bootstrap.yaml)
    (acknowledge IAM resources). It creates:
    - the GitHub OpenID Connect provider and the role `aeromro-github-deploy`, which only the main
-     branch of this repository can assume;
+     branch of this repository can assume. The trust policy accepts both subject formats GitHub
+     uses: `repo:owner/name:…` and, for repositories created or renamed after 15 July 2026, the
+     immutable `repo:owner@ownerId/name@repoId:…` (parameter `GitHubRepositoryWithIds`);
    - the model registry bucket `aeromro-artifacts-ACCOUNT-REGION` (private, encrypted, versioned);
    - the image registry `aeromro-api` (scan on push, immutable tags, last 10 images kept);
    - the permissions boundary `aeromro-boundary`, which caps every role the deployments create:
