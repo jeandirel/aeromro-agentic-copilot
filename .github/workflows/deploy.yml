@@ -17,6 +17,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  deployments: write
 
 concurrency:
   group: deploy
@@ -56,9 +57,15 @@ jobs:
             exit 1
           fi
           aws s3 sync "s3://${BUCKET}/models/${VERSION}/" models/ --exclude "*" --include "rul_*"
+          aws s3 sync "s3://${BUCKET}/models/${VERSION}/data/" data/raw/CMAPSSData/ || true
           echo "MODEL_VERSION=${VERSION}" >> "$GITHUB_ENV"
-      - name: Download the in-service engines (NASA, checksums verified)
-        run: python -m aeromro.data.download --dest data/raw/CMAPSSData
+      - name: In-service engines (from the model bundle, else NASA with retries and mirror)
+        run: |
+          if ls data/raw/CMAPSSData/test_FD00*.txt >/dev/null 2>&1; then
+            echo "in-service engines taken from the model bundle"
+          else
+            python -m aeromro.data.download --dest data/raw/CMAPSSData
+          fi
       - name: Check that every model loads and scores its fleet
         run: |
           python - <<'EOF'
@@ -100,6 +107,7 @@ jobs:
           URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           URL="${URL%/}"
+          echo "API_URL=${URL}" >> "$GITHUB_ENV"
           for i in 1 2 3 4 5; do curl -fsS "${URL}/health" && break || sleep 10; done
           curl -fsS "${URL}/fleets/FD001/engines?status=inspect_now" | head -c 600; echo
           {
@@ -108,3 +116,15 @@ jobs:
             echo "- Image: \`${IMAGE}\`"
             echo "- Models: \`${MODEL_VERSION}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Record the deployment on GitHub (link shown on the repository page)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ID=$(jq -n --arg ref "$GITHUB_SHA" \
+            '{ref: $ref, environment: "production", auto_merge: false, required_contexts: [],
+              description: "AWS Lambda, eu-west-3"}' \
+            | gh api "repos/${GITHUB_REPOSITORY}/deployments" --input - --jq .id)
+          jq -n --arg url "$API_URL" \
+            --arg log "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            '{state: "success", environment_url: $url, log_url: $log}' \
+            | gh api "repos/${GITHUB_REPOSITORY}/deployments/${ID}/statuses" --input -

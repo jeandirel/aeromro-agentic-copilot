@@ -30,7 +30,8 @@ python -m aeromro.data.download --dest data/raw/CMAPSSData           # from NASA
 python -m aeromro.data.download --dest data/raw/CMAPSSData --verify-only
 ```
 
-The script downloads the archive, extracts the 12 data files (looking inside a nested archive if
+The script downloads the archive (3 attempts with exponential backoff; if NASA stays
+unreachable it falls back to a public copy of the same files on GitHub), extracts the 12 data files (looking inside a nested archive if
 there is one) and checks each against the SHA-256 checksum of the files used for the published
 results. Checksums are computed after normalising line endings, so a copy saved on Windows still
 passes, while any changed value is rejected. Copies found elsewhere (Kaggle, IEEE DataPort, GitHub

@@ -64,5 +64,9 @@ jobs:
           VERSION="${GITHUB_SHA::12}-${GITHUB_RUN_ID}"
           aws s3 cp models/ "s3://${BUCKET}/models/${VERSION}/" --recursive
           aws s3 cp reports/rul_results.json "s3://${BUCKET}/models/${VERSION}/rul_results.json"
+          # The in-service engines served with these models travel with them: deploying never
+          # depends on the NASA site being up.
+          aws s3 cp data/raw/CMAPSSData/ "s3://${BUCKET}/models/${VERSION}/data/" --recursive \
+            --exclude "*" --include "test_FD00*.txt"
           echo -n "${VERSION}" | aws s3 cp - "s3://${BUCKET}/models/latest.txt"
           echo "- Published to s3://${BUCKET}/models/${VERSION}/ (latest)" >> "$GITHUB_STEP_SUMMARY"

@@ -50,3 +50,64 @@ def test_missing_file_is_reported(fake_files, tmp_path):
 
 def test_line_endings_do_not_change_the_checksum():
     assert dl.normalised_sha256(b"a\r\nb\r\n") == dl.normalised_sha256(b"a\nb\n")
+
+
+class FakeResponse:
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self) -> bytes:
+        return self.data
+
+
+def test_fetch_retries_then_succeeds():
+    calls, waits = [], []
+
+    def opener(request, timeout):
+        calls.append(request.full_url)
+        if len(calls) < 3:
+            raise OSError("temporary failure")
+        return FakeResponse(b"payload")
+
+    data = dl.fetch("https://example.org/x", opener=opener, sleep=waits.append, backoff_s=1)
+    assert data == b"payload"
+    assert len(calls) == 3 and waits == [1, 2]
+
+
+def test_fetch_gives_up_after_the_last_attempt():
+    def opener(request, timeout):
+        raise OSError("down")
+
+    with pytest.raises(OSError, match="down"):
+        dl.fetch("https://example.org/x", opener=opener, sleep=lambda s: None, attempts=2)
+
+
+def test_mirror_files_are_verified(fake_files, tmp_path, monkeypatch):
+    served = dict(fake_files)
+    monkeypatch.setattr(dl, "fetch", lambda url, **kw: served[url.rsplit("/", 1)[1]])
+    written = dl.download_from_mirror("https://mirror.example/", tmp_path)
+    assert len(written) == 12 and all(dl.verify_directory(tmp_path).values())
+
+    served["train_FD002.txt"] = b"tampered\n"
+    with pytest.raises(ValueError, match="train_FD002.txt"):
+        dl.download_from_mirror("https://mirror.example/", tmp_path / "other")
+
+
+def test_cli_falls_back_to_the_mirror(fake_files, tmp_path, monkeypatch):
+    def failing_download(url, **kw):
+        raise OSError("NASA unreachable")
+
+    monkeypatch.setattr(dl, "download", failing_download)
+    monkeypatch.setattr(dl, "fetch", lambda url, **kw: fake_files[url.rsplit("/", 1)[1]])
+    dl.main(["--dest", str(tmp_path)])
+    assert all(dl.verify_directory(tmp_path).values())
+
+    monkeypatch.setattr(dl, "fetch", failing_download)
+    with pytest.raises(OSError):
+        dl.main(["--dest", str(tmp_path / "none"), "--mirror", ""])
