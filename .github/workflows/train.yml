@@ -2,6 +2,8 @@ name: Train RUL model
 
 # Manual run: downloads NASA C-MAPSS, checks every file against its checksum, trains and evaluates
 # the four subsets, and publishes the models and the evaluation report as build artefacts.
+# When AWS is configured (repository variable AWS_DEPLOY_ROLE_ARN), the models are also pushed to
+# the model registry (S3) under the commit id, and marked as the latest version for deployment.
 on:
   workflow_dispatch:
     inputs:
@@ -9,9 +11,17 @@ on:
         description: "C-MAPSS archive URL"
         required: false
         default: "https://data.nasa.gov/docs/legacy/CMAPSSData.zip"
+      publish:
+        description: "Publish to the model registry (S3) and mark as latest"
+        type: boolean
+        default: true
 
 permissions:
+  id-token: write
   contents: read
+
+env:
+  AWS_REGION: eu-west-3
 
 jobs:
   train:
@@ -23,12 +33,17 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install
-        run: pip install -e .
+      - name: Install (pinned runtime versions, same as the API image)
+        run: |
+          pip install -r requirements/runtime.txt
+          pip install --no-deps -e .
       - name: Download and verify the dataset
         run: python -m aeromro.data.download --dest data/raw/CMAPSSData --url "${{ inputs.data_url }}"
       - name: Train and evaluate
-        run: python -m aeromro.rul.train --data-dir data/raw/CMAPSSData --out models --report reports/rul_results.json
+        run: |
+          python -m aeromro.rul.train --data-dir data/raw/CMAPSSData --out models \
+            --report reports/rul_results.json | tee train.log
+          { echo "### RUL model, ${GITHUB_SHA::12}"; sed -n '/^| Subset/,$p' train.log; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: rul-models
@@ -36,3 +51,18 @@ jobs:
             models/
             reports/rul_results.json
           retention-days: 30
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: inputs.publish && vars.AWS_DEPLOY_ROLE_ARN != ''
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Publish to the model registry
+        if: inputs.publish && vars.AWS_DEPLOY_ROLE_ARN != ''
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          BUCKET="aeromro-artifacts-${ACCOUNT}-${AWS_REGION}"
+          VERSION="${GITHUB_SHA::12}-${GITHUB_RUN_ID}"
+          aws s3 cp models/ "s3://${BUCKET}/models/${VERSION}/" --recursive
+          aws s3 cp reports/rul_results.json "s3://${BUCKET}/models/${VERSION}/rul_results.json"
+          echo -n "${VERSION}" | aws s3 cp - "s3://${BUCKET}/models/latest.txt"
+          echo "- Published to s3://${BUCKET}/models/${VERSION}/ (latest)" >> "$GITHUB_STEP_SUMMARY"

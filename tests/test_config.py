@@ -23,3 +23,13 @@ def test_invalid_values_are_rejected(monkeypatch):
     monkeypatch.setenv("AEROMRO_TEMPERATURE", "2")
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+def test_empty_values_fall_back_to_defaults(monkeypatch):
+    # Deployment templates and .env.example leave optional values empty.
+    monkeypatch.setenv("AEROMRO_DEMO_ACCESS_CODE", "")
+    monkeypatch.setenv("AEROMRO_PRICE_INPUT_PER_1K_TOKENS", "")
+    s = Settings(_env_file=None)
+    assert s.demo_access_code is None
+    assert s.price_input_per_1k_tokens is None
+    assert Settings(_env_file=None, demo_access_code="").demo_access_code is None

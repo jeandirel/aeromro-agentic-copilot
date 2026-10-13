@@ -2,13 +2,9 @@ import json
 
 import numpy as np
 
+from aeromro.data.synthetic import write_cmapss
 from aeromro.rul.model import RULModel
 from aeromro.rul.train import main, truncate_engines
-
-
-def write_cmapss(df, path):
-    lines = [" ".join(str(v) for v in row) + "  " for row in df.itertuples(index=False)]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def test_train_cli_end_to_end(tmp_path, make_fleet):

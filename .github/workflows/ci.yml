@@ -22,7 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,api]"
       - name: Lint
         run: |
           ruff check .
@@ -39,3 +39,31 @@ jobs:
         run: docker build -t aeromro:ci .
       - name: Smoke test
         run: docker run --rm aeromro:ci
+
+  lambda-image:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Synthetic fleets and quick models (the real ones live in the model registry)
+        run: |
+          pip install -r requirements/runtime.txt
+          pip install --no-deps -e .
+          python -m aeromro.data.smoke --data-dir data/raw/CMAPSSData --models-dir models
+      - name: Build the Lambda image
+        run: docker build -f Dockerfile.lambda -t aeromro-api:ci .
+      - name: Start it and call the API
+        run: |
+          docker run -d --name api -p 8080:8080 -e AEROMRO_LLM_PROVIDER=mock aeromro-api:ci
+          for i in $(seq 1 30); do curl -fsS localhost:8080/health && break || sleep 1; done
+          curl -fsS localhost:8080/fleets | python -c "import json,sys; d=json.load(sys.stdin); assert len(d) == 4, d"
+          curl -fsS "localhost:8080/fleets/FD004/engines/1?history=5"
+          curl -fsS -X POST localhost:8080/ask -H "Content-Type: application/json" \
+            -d '{"subset": "FD001", "unit": 1, "question": "Status?"}'
+      - name: Container logs
+        if: always()
+        run: docker logs api || true

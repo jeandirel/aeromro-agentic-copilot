@@ -1,0 +1,35 @@
+# API image for AWS Lambda (container image + Lambda Web Adapter + function URL).
+# Build context must contain the in-service engine files and the trained models:
+#   data/raw/CMAPSSData/test_FD00X.txt  and  models/rul_FD00X.joblib (+ .json)
+# The deploy workflow downloads both before building (see .github/workflows/deploy.yml).
+FROM public.ecr.aws/docker/library/python:3.12-slim
+
+# Lambda Web Adapter: turns Lambda invocations into HTTP requests to the app on port 8080.
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0 /lambda-adapter /opt/extensions/lambda-adapter
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    AWS_LWA_PORT=8080 \
+    AWS_LWA_READINESS_CHECK_PATH=/health \
+    AEROMRO_DATA_DIR=/app/data \
+    AEROMRO_MODELS_DIR=/app/models
+
+WORKDIR /app
+
+# Same pinned versions as the training job, so the models load with the library that made them.
+COPY requirements/runtime.txt requirements/runtime.txt
+RUN pip install -r requirements/runtime.txt
+
+COPY pyproject.toml README.md LICENSE ./
+COPY src ./src
+RUN pip install --no-deps .
+
+COPY data/raw/CMAPSSData/test_FD00*.txt ./data/
+COPY models/rul_FD00*.joblib models/rul_FD00*.json ./models/
+# Score every in-service engine once at build time: listing a fleet is then instant on Lambda.
+RUN python -m aeromro.fleet --data-dir /app/data --models-dir /app/models
+
+USER 1000
+CMD ["uvicorn", "aeromro.api.app:app", "--host", "0.0.0.0", "--port", "8080", "--no-access-log"]

@@ -1,0 +1,110 @@
+name: Deploy
+
+# Builds the API image with the latest models from the registry (S3), pushes it to ECR and
+# deploys infra/app.yaml. AWS access goes through OpenID Connect: no AWS keys are stored in GitHub.
+# Requires the repository variable AWS_DEPLOY_ROLE_ARN (output of infra/bootstrap.yaml).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "requirements/runtime.txt"
+      - "Dockerfile.lambda"
+      - "infra/app.yaml"
+      - ".github/workflows/deploy.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-3
+  STACK_NAME: aeromro-app
+  REPOSITORY: aeromro-api
+
+jobs:
+  deploy:
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install (pinned runtime versions)
+        run: |
+          pip install -r requirements/runtime.txt
+          pip install --no-deps -e .
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Fetch the latest models from the registry
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          BUCKET="aeromro-artifacts-${ACCOUNT}-${AWS_REGION}"
+          VERSION=$(aws s3 cp "s3://${BUCKET}/models/latest.txt" - 2>/dev/null || true)
+          if [ -z "$VERSION" ]; then
+            echo "::error::No model in s3://${BUCKET}/models/. Run the 'Train RUL model' workflow first."
+            exit 1
+          fi
+          aws s3 sync "s3://${BUCKET}/models/${VERSION}/" models/ --exclude "*" --include "rul_*"
+          echo "MODEL_VERSION=${VERSION}" >> "$GITHUB_ENV"
+      - name: Download the in-service engines (NASA, checksums verified)
+        run: python -m aeromro.data.download --dest data/raw/CMAPSSData
+      - name: Check that every model loads and scores its fleet
+        run: |
+          python - <<'EOF'
+          from aeromro.fleet import FleetService
+          fleet = FleetService("data/raw/CMAPSSData", "models")
+          subsets = fleet.available_subsets()
+          assert subsets == ["FD001", "FD002", "FD003", "FD004"], subsets
+          for s in subsets:
+              print(s, len(fleet.fleet(s)), "engines scored")
+          EOF
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push the image
+        run: |
+          TAG="${GITHUB_SHA::12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          IMAGE="${{ steps.ecr.outputs.registry }}/${REPOSITORY}:${TAG}"
+          docker build -f Dockerfile.lambda -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
+      - name: Deploy the stack
+        env:
+          DEMO_ACCESS_CODE: ${{ secrets.AEROMRO_DEMO_ACCESS_CODE }}
+          BEDROCK_MODEL_ID: ${{ vars.AEROMRO_BEDROCK_MODEL_ID || 'eu.amazon.nova-2-lite-v1:0' }}
+          CORS_ORIGINS: ${{ vars.AEROMRO_CORS_ORIGINS || '*' }}
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$STACK_NAME" \
+            --template-file infra/app.yaml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              "ImageUri=${IMAGE}" \
+              "BedrockModelId=${BEDROCK_MODEL_ID}" \
+              "DemoAccessCode=${DEMO_ACCESS_CODE}" \
+              "CorsOrigins=${CORS_ORIGINS}"
+      - name: Smoke test
+        run: |
+          URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
+          URL="${URL%/}"
+          for i in 1 2 3 4 5; do curl -fsS "${URL}/health" && break || sleep 10; done
+          curl -fsS "${URL}/fleets/FD001/engines?status=inspect_now" | head -c 600; echo
+          {
+            echo "### Deployed"
+            echo "- API: ${URL}"
+            echo "- Image: \`${IMAGE}\`"
+            echo "- Models: \`${MODEL_VERSION}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
