@@ -38,7 +38,7 @@ set with the repository variable `AEROMRO_BEDROCK_MODEL_ID`.
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | every push and pull request | lint, 86 tests on Python 3.11 / 3.12, builds and starts the Lambda image on synthetic data |
+| `ci.yml` | every push and pull request | lint, 92 tests on Python 3.11 / 3.12, builds and starts the Lambda image on synthetic data |
 | `train.yml` | manual | downloads NASA C-MAPSS (checksums verified), trains and evaluates, publishes the models to `s3://…/models/VERSION/` and marks them as latest |
 | `deploy.yml` | push to main touching the app, or manual | fetches the latest models, checks they load and score their fleets, builds and pushes the image, deploys [`infra/app.yaml`](../infra/app.yaml), calls the live API |
 
@@ -72,6 +72,19 @@ Interactive documentation is served at `/docs`.
 Status rule: `inspect_now` if the estimate is at most 15 cycles, `plan_inspection` up to 50,
 `healthy` above. The confidence is the share of the 80 % interval that falls in the same status
 band as the estimate; a recommendation below 0.7 is flagged for human approval by the harness.
+
+## When the language model is unavailable
+
+`POST /ask` never depends on Bedrock alone. If the call fails (quota exhausted, throttling,
+access denied, timeout), the answer is built from the same facts without a language model, marked
+`[summary without language model]`, and the response carries `fallback_reason` (the AWS error
+code). A circuit breaker then skips Bedrock for 5 minutes instead of failing again on every
+request, and lets one call through afterwards to detect recovery. The Bedrock client itself uses
+2 attempts and bounded timeouts, so a slow model hands over quickly.
+
+New AWS accounts can start with a Bedrock quota of 0 tokens per day
+(`ThrottlingException: Too many tokens per day`); the quota is raised through Service Quotas or
+an AWS Support case. The demo keeps working in the meantime thanks to the fallback.
 
 ## Cost and limits
 

@@ -23,7 +23,16 @@ class BedrockConverseClient:
                 raise ImportError(
                     "boto3 is missing: install with pip install 'aeromro-agentic-copilot[aws]'"
                 ) from exc
-            client = boto3.client("bedrock-runtime", region_name=region)
+            from botocore.config import Config
+
+            # Few retries and bounded timeouts: a slow or throttled model should hand over to the
+            # fallback quickly rather than keep the user waiting.
+            config = Config(
+                retries={"max_attempts": 2, "mode": "standard"},
+                connect_timeout=5,
+                read_timeout=25,
+            )
+            client = boto3.client("bedrock-runtime", region_name=region, config=config)
         self._client = client
 
     def build_request(

@@ -33,6 +33,8 @@ class LLMResponse(BaseModel):
     usage: Usage
     model: str
     stop_reason: str | None = None
+    # Set when another client answered because the requested one failed (see llm.fallback).
+    fallback_reason: str | None = None
 
 
 @runtime_checkable
