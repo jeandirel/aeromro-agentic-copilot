@@ -64,6 +64,10 @@ jobs:
           curl -fsS "localhost:8080/fleets/FD004/engines/1?history=5"
           curl -fsS -X POST localhost:8080/ask -H "Content-Type: application/json" \
             -d '{"subset": "FD001", "unit": 1, "question": "Status?"}'
+          curl -fsS -X POST localhost:8080/mcp -H "Content-Type: application/json" \
+            -H "Accept: application/json, text/event-stream" -H "Mcp-Protocol-Version: 2025-06-18" \
+            -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "estimate_rul", "arguments": {"subset": "FD002", "unit": 1}}}' \
+            | python -c "import json,sys; r=json.load(sys.stdin)['result']; assert not r['isError'], r; print(r['structuredContent'])"
       - name: Container logs
         if: always()
         run: docker logs api || true

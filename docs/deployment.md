@@ -36,7 +36,7 @@ set with the repository variable `AEROMRO_BEDROCK_MODEL_ID`.
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | every push and pull request | lint, 78 tests on Python 3.11 / 3.12, builds and starts the Lambda image on synthetic data |
+| `ci.yml` | every push and pull request | lint, 86 tests on Python 3.11 / 3.12, builds and starts the Lambda image on synthetic data |
 | `train.yml` | manual | downloads NASA C-MAPSS (checksums verified), trains and evaluates, publishes the models to `s3://…/models/VERSION/` and marks them as latest |
 | `deploy.yml` | push to main touching the app, or manual | fetches the latest models, checks they load and score their fleets, builds and pushes the image, deploys [`infra/app.yaml`](../infra/app.yaml), calls the live API |
 
@@ -62,6 +62,8 @@ model is always loaded by the library version that produced it.
 | `GET /fleets/{subset}/engines?status=` | every in-service engine: RUL, 80 % interval, status, confidence |
 | `GET /fleets/{subset}/engines/{unit}?history=60` | one engine: assessment, RUL and key sensors over the last cycles |
 | `POST /ask` | an explanation by the language model, the harness policy decision, tokens, latency and cost |
+| `POST /mcp` | MCP endpoint (Streamable HTTP, stateless, JSON responses): the fleet tools |
+| `GET /audit?limit=50` | latest tool calls seen by the harness on this instance |
 
 Interactive documentation is served at `/docs`.
 
