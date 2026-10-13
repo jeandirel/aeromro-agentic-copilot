@@ -1,0 +1,303 @@
+{
+  "config": {
+    "clip": 125,
+    "short_window": 5,
+    "long_window": 70,
+    "quantiles": [
+      0.1,
+      0.9
+    ],
+    "learning_rate": 0.05,
+    "max_iter": 300,
+    "max_leaf_nodes": 31,
+    "min_samples_leaf": 50,
+    "l2_regularization": 1.0,
+    "random_state": 0
+  },
+  "results": [
+    {
+      "subset": "FD001",
+      "n_train_engines": 100,
+      "n_test_engines": 100,
+      "cv": {
+        "model": {
+          "rmse": 32.5029,
+          "rmse_clipped": 8.8167,
+          "mae": 17.0578,
+          "phm08_score": 5423132.7907,
+          "phm08_score_clipped": 371.8269,
+          "late_rate_10": 0.1233,
+          "interval_coverage_clipped": 0.5933,
+          "interval_mean_width": 12.4995,
+          "n": 300
+        },
+        "ridge": {
+          "rmse": 36.4639,
+          "rmse_clipped": 15.3046,
+          "mae": 23.5935,
+          "phm08_score": 5309697.9105,
+          "phm08_score_clipped": 1217.8274,
+          "late_rate_10": 0.34,
+          "n": 300
+        },
+        "constant": {
+          "rmse": 62.0365,
+          "rmse_clipped": 42.7906,
+          "mae": 49.647,
+          "phm08_score": 242948390.5207,
+          "phm08_score_clipped": 46539.0709,
+          "late_rate_10": 0.4533,
+          "n": 300
+        }
+      },
+      "test": {
+        "model": {
+          "rmse": 12.2104,
+          "rmse_clipped": 11.0268,
+          "mae": 9.105,
+          "phm08_score": 242.1601,
+          "phm08_score_clipped": 216.249,
+          "late_rate_10": 0.19,
+          "interval_coverage_clipped": 0.69,
+          "interval_mean_width": 18.1411,
+          "n": 100,
+          "interval_coverage_uncalibrated": 0.48
+        },
+        "ridge": {
+          "rmse": 16.6909,
+          "rmse_clipped": 15.3438,
+          "mae": 13.4155,
+          "phm08_score": 412.3432,
+          "phm08_score_clipped": 363.0512,
+          "late_rate_10": 0.31,
+          "n": 100
+        },
+        "constant": {
+          "rmse": 41.5869,
+          "rmse_clipped": 40.077,
+          "mae": 36.9931,
+          "phm08_score": 10862.5992,
+          "phm08_score_clipped": 10120.1597,
+          "late_rate_10": 0.4,
+          "n": 100
+        }
+      },
+      "conformal_margin": 2.5476,
+      "predict_ms_single_engine": 45.37,
+      "elapsed_s": 303.4
+    },
+    {
+      "subset": "FD002",
+      "n_train_engines": 260,
+      "n_test_engines": 259,
+      "cv": {
+        "model": {
+          "rmse": 30.9608,
+          "rmse_clipped": 11.3687,
+          "mae": 17.8398,
+          "phm08_score": 8920514.6606,
+          "phm08_score_clipped": 1801.8952,
+          "late_rate_10": 0.1833,
+          "interval_coverage_clipped": 0.7256,
+          "interval_mean_width": 20.8836,
+          "n": 780
+        },
+        "ridge": {
+          "rmse": 34.3327,
+          "rmse_clipped": 16.2139,
+          "mae": 22.7731,
+          "phm08_score": 8688018.9155,
+          "phm08_score_clipped": 3626.174,
+          "late_rate_10": 0.3308,
+          "n": 780
+        },
+        "constant": {
+          "rmse": 58.5733,
+          "rmse_clipped": 41.602,
+          "mae": 46.7277,
+          "phm08_score": 329008253.0639,
+          "phm08_score_clipped": 124111.2536,
+          "late_rate_10": 0.4205,
+          "n": 780
+        }
+      },
+      "test": {
+        "model": {
+          "rmse": 22.7903,
+          "rmse_clipped": 10.447,
+          "mae": 14.7326,
+          "phm08_score": 3642.573,
+          "phm08_score_clipped": 535.9669,
+          "late_rate_10": 0.139,
+          "interval_coverage_clipped": 0.8764,
+          "interval_mean_width": 24.098,
+          "n": 259,
+          "interval_coverage_uncalibrated": 0.7915
+        },
+        "ridge": {
+          "rmse": 27.7396,
+          "rmse_clipped": 15.4218,
+          "mae": 20.005,
+          "phm08_score": 8687.8279,
+          "phm08_score_clipped": 963.1636,
+          "late_rate_10": 0.2703,
+          "n": 259
+        },
+        "constant": {
+          "rmse": 54.0204,
+          "rmse_clipped": 43.0058,
+          "mae": 45.465,
+          "phm08_score": 128322.4957,
+          "phm08_score_clipped": 41728.6551,
+          "late_rate_10": 0.4093,
+          "n": 259
+        }
+      },
+      "conformal_margin": 2.0396,
+      "predict_ms_single_engine": 40.84,
+      "elapsed_s": 96.4
+    },
+    {
+      "subset": "FD003",
+      "n_train_engines": 100,
+      "n_test_engines": 100,
+      "cv": {
+        "model": {
+          "rmse": 56.5755,
+          "rmse_clipped": 9.5889,
+          "mae": 27.2093,
+          "phm08_score": 1080087647721.637,
+          "phm08_score_clipped": 419.9518,
+          "late_rate_10": 0.12,
+          "interval_coverage_clipped": 0.69,
+          "interval_mean_width": 15.5585,
+          "n": 300
+        },
+        "ridge": {
+          "rmse": 58.5182,
+          "rmse_clipped": 15.7716,
+          "mae": 33.2897,
+          "phm08_score": 1074413769337.3075,
+          "phm08_score_clipped": 1314.8398,
+          "late_rate_10": 0.3,
+          "n": 300
+        },
+        "constant": {
+          "rmse": 81.4983,
+          "rmse_clipped": 43.1573,
+          "mae": 59.833,
+          "phm08_score": 29016502322080.965,
+          "phm08_score_clipped": 73654.2842,
+          "late_rate_10": 0.4233,
+          "n": 300
+        }
+      },
+      "test": {
+        "model": {
+          "rmse": 11.4871,
+          "rmse_clipped": 10.0008,
+          "mae": 8.0381,
+          "phm08_score": 244.8032,
+          "phm08_score_clipped": 215.773,
+          "late_rate_10": 0.12,
+          "interval_coverage_clipped": 0.76,
+          "interval_mean_width": 23.7172,
+          "n": 100,
+          "interval_coverage_uncalibrated": 0.7
+        },
+        "ridge": {
+          "rmse": 18.6703,
+          "rmse_clipped": 17.0458,
+          "mae": 15.501,
+          "phm08_score": 792.092,
+          "phm08_score_clipped": 730.1117,
+          "late_rate_10": 0.4,
+          "n": 100
+        },
+        "constant": {
+          "rmse": 41.8603,
+          "rmse_clipped": 39.9313,
+          "mae": 35.9632,
+          "phm08_score": 19247.7722,
+          "phm08_score_clipped": 18606.3897,
+          "late_rate_10": 0.49,
+          "n": 100
+        }
+      },
+      "conformal_margin": 1.5762,
+      "predict_ms_single_engine": 40.06,
+      "elapsed_s": 68.1
+    },
+    {
+      "subset": "FD004",
+      "n_train_engines": 249,
+      "n_test_engines": 248,
+      "cv": {
+        "model": {
+          "rmse": 53.1478,
+          "rmse_clipped": 12.5206,
+          "mae": 29.5824,
+          "phm08_score": 47280382822.087,
+          "phm08_score_clipped": 7031.2358,
+          "late_rate_10": 0.17,
+          "interval_coverage_clipped": 0.7483,
+          "interval_mean_width": 21.5153,
+          "n": 747
+        },
+        "ridge": {
+          "rmse": 56.4658,
+          "rmse_clipped": 18.3748,
+          "mae": 35.5029,
+          "phm08_score": 45523375400.8089,
+          "phm08_score_clipped": 19727.6908,
+          "late_rate_10": 0.3092,
+          "n": 747
+        },
+        "constant": {
+          "rmse": 77.9584,
+          "rmse_clipped": 42.0295,
+          "mae": 58.7384,
+          "phm08_score": 1211779663698.4165,
+          "phm08_score_clipped": 205546.4365,
+          "late_rate_10": 0.3989,
+          "n": 747
+        }
+      },
+      "test": {
+        "model": {
+          "rmse": 23.8416,
+          "rmse_clipped": 11.3387,
+          "mae": 15.9052,
+          "phm08_score": 3189.541,
+          "phm08_score_clipped": 607.0038,
+          "late_rate_10": 0.1169,
+          "interval_coverage_clipped": 0.8105,
+          "interval_mean_width": 24.9798,
+          "n": 248,
+          "interval_coverage_uncalibrated": 0.7742
+        },
+        "ridge": {
+          "rmse": 30.6051,
+          "rmse_clipped": 18.5859,
+          "mae": 23.2679,
+          "phm08_score": 7695.2082,
+          "phm08_score_clipped": 1636.5608,
+          "late_rate_10": 0.3347,
+          "n": 248
+        },
+        "constant": {
+          "rmse": 54.6654,
+          "rmse_clipped": 43.244,
+          "mae": 46.6495,
+          "phm08_score": 115578.3658,
+          "phm08_score_clipped": 60083.1339,
+          "late_rate_10": 0.4073,
+          "n": 248
+        }
+      },
+      "conformal_margin": 1.7468,
+      "predict_ms_single_engine": 45.69,
+      "elapsed_s": 106.8
+    }
+  ]
+}

@@ -14,9 +14,9 @@ To answer, a team of agents combines **engine sensor data** (remaining useful li
 NASA C-MAPSS dataset) with **regulatory documents** (retrieval over public FAA texts), cites its
 sources, and **never takes a safety decision on its own**: risky actions wait for a human.
 
-> **Status: early stage, step 1 of 7.** The foundations below are built and tested; the agents,
-> protocols and AWS deployment are on the [roadmap](#roadmap). This README only describes what
-> exists, and is updated at each step.
+> **Status: step 2 of 7.** The foundations and the engine-health model below are built, tested
+> and measured; the agents, protocols and AWS deployment are on the [roadmap](#roadmap). This
+> README only describes what exists, and is updated at each step.
 
 ## What it demonstrates
 
@@ -27,7 +27,7 @@ sources, and **never takes a safety decision on its own**: risky actions wait fo
 | Agent harness | Fail-closed action policy, human approval for side effects, token budget ([why](docs/adr/0003-fail-closed-harness.md)) |
 | Cloud | Amazon Bedrock (Converse API), AWS Lambda, S3, CloudWatch ([why](docs/adr/0002-aws-bedrock-lambda.md)) |
 | Cost, latency, reliability | Every LLM call recorded: tokens, cost, p50 / p95 latency |
-| Industrial ML | Remaining useful life (RUL) prediction on turbofan run-to-failure data |
+| Industrial ML | Remaining useful life (RUL) of turbofan engines with a calibrated uncertainty interval ([model card](docs/model_card_rul.md)) |
 | Engineering | Typed Python, tests, lint, CI, Docker, architecture decision records |
 
 ## Architecture
@@ -50,7 +50,27 @@ flowchart LR
 
 Details in [docs/architecture.md](docs/architecture.md).
 
-## What is built today (step 1)
+## What is built today
+
+### Engine health model (step 2)
+
+Predicts how many cycles an engine has left, with an 80 % interval the agents use to judge how
+sure they can be. Gradient-boosted trees on condition-normalised sensor trends, interval
+calibrated by conformal prediction, evaluated once on the official NASA test sets:
+
+| Subset | Conditions / fault modes | Test RMSE (cycles, clipped at 125) | Ridge baseline | PHM08 score | Interval coverage (target 80 %) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| FD001 | 1 / 1 | **11.03** | 15.34 | 242 | 69 % |
+| FD002 | 6 / 1 | **10.45** | 15.42 | 3,643 | 88 % |
+| FD003 | 1 / 2 | **10.00** | 17.05 | 245 | 76 % |
+| FD004 | 6 / 2 | **11.34** | 18.59 | 3,190 | 81 % |
+
+Everything was chosen by cross-validation on training engines, never on the test set. Unclipped
+RMSE, baselines, latency (about 40 ms per engine) and limits are in the
+[model card](docs/model_card_rul.md); the raw figures are in
+[reports/rul_results.json](reports/rul_results.json).
+
+### Foundations (step 1)
 
 - **One LLM interface, two implementations** (`aeromro.llm`): a deterministic mock, so tests and
   CI run offline at no cost, and an Amazon Bedrock client on the Converse API, which returns token
@@ -62,11 +82,14 @@ Details in [docs/architecture.md](docs/architecture.md).
   latency and token budget per session.
 - **C-MAPSS loader** (`aeromro.data.cmapss`): reads the NASA files and builds train and test RUL
   labels (clipped at 125 cycles by default).
-- **Quality**: 34 tests, ruff, GitHub Actions on Python 3.11 and 3.12, Docker image.
+- **Dataset download with checksum verification** (`aeromro.data.download`): the NASA files are
+  accepted only if identical to the ones the results were produced with.
+- **Quality**: 58 tests (95 % coverage), ruff, GitHub Actions on Python 3.11 and 3.12, Docker
+  image, and a manual workflow that downloads the data, retrains and publishes the models.
 
 ```console
 $ python -m aeromro
-aeromro-agentic-copilot 0.1.0
+aeromro-agentic-copilot 0.2.0
 llm provider : mock
 action policy:
   READ      estimate_rul           -> allow
@@ -97,14 +120,21 @@ set `AEROMRO_LLM_PROVIDER=bedrock` and a model id enabled in your account
 pip install -e ".[aws]"
 ```
 
+To reproduce the engine-health results (about 10 minutes on a 2-core machine):
+
+```bash
+python -m aeromro.data.download --dest data/raw/CMAPSSData   # NASA files, checksums verified
+python -m aeromro.rul.train --data-dir data/raw/CMAPSSData --out models
+```
+
 The dataset is not stored in the repository; see [docs/data.md](docs/data.md).
 
 ## Roadmap
 
 - [x] **1. Foundations**: LLM interface (mock and Bedrock), harness policy and telemetry,
   C-MAPSS loader, CI, ADRs
-- [ ] **2. RUL model**: baseline and stronger model on FD001 to FD004, RMSE and PHM08 score,
-  model card
+- [x] **2. RUL model**: gradient-boosted trees with a calibrated interval on FD001 to FD004,
+  baselines, RMSE and PHM08 score, model card
 - [ ] **3. MCP tool servers**: engine telemetry and RUL tools; regulation search with citations
   over public FAA documents
 - [ ] **4. Agents**: LangGraph orchestrator, engine health and compliance agents over A2A,
@@ -121,9 +151,11 @@ src/aeromro/
   config.py          settings from AEROMRO_* environment variables
   llm/               LLM interface, mock client, Bedrock Converse client
   harness/           action policy, cost and latency telemetry
-  data/              NASA C-MAPSS loader and RUL labels
+  data/              NASA C-MAPSS loader, RUL labels, verified download
+  rul/               features, RUL model with interval, metrics, training and evaluation
 tests/               unit tests (no network, no AWS account needed)
-docs/                architecture, data sources, architecture decision records
+docs/                architecture, data sources, model card, architecture decision records
+reports/             evaluation results (JSON)
 ```
 
 ## Disclaimer
