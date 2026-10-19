@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d30">
+  <meta name="description" content="AeroMRO — poste de pilotage de maintenance prédictive sur données simulées NASA C-MAPSS.">
+  <title>AeroMRO | Fleet Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="/" aria-label="AeroMRO, accueil">
+        <span class="brand-mark"><svg width="31" height="31" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M4 16L26.5 5L20.5 13.5L28 16L20.5 18.5L26.5 27L4 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 16H19" stroke="currentColor" stroke-width="1.8"/></svg></span>
+        <span class="brand-title">AERO<span>MRO</span><small>FLEET INTELLIGENCE</small></span>
+      </a>
+      <div class="workspace-label">ESPACE DE TRAVAIL</div>
+      <nav class="nav-list" aria-label="Navigation principale">
+        <button class="nav-link active" data-view="overview" aria-current="page"><span class="nav-icon">◫</span><span>Vue d’ensemble</span></button>
+        <button class="nav-link" data-view="fleet"><span class="nav-icon">▦</span><span>Parc moteurs</span></button>
+        <button class="nav-link" data-view="assistant"><span class="nav-icon">✧</span><span>Copilote IA</span></button>
+        <button class="nav-link" data-view="audit"><span class="nav-icon">≡</span><span>Journal d’audit</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note"><span class="note-spark">✦</span><strong>Decision support</strong><p>Prédictions d’aide à la maintenance. Aucune décision de navigabilité automatique.</p></div>
+        <div class="sidebar-footer"><span class="user-avatar">AM</span><span><strong>AeroMRO Studio</strong><small>Environnement de recherche</small></span><span class="more-icon">⋯</span></div>
+      </div>
+    </aside>
+
+    <div class="mobile-backdrop" id="backdrop" hidden></div>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><button class="mobile-menu icon-button" id="menuButton" aria-label="Ouvrir le menu">☰</button><span class="breadcrumbs">WORKSPACE <span>/</span> <strong id="breadcrumbCurrent">Vue d’ensemble</strong></span></div>
+        <div class="topbar-right"><span class="simulation-tag"><span class="sim-dot"></span> NASA C-MAPSS · DONNÉES SIMULÉES</span><span id="connectionBadge" class="connection connecting"><i></i> Connexion…</span><button id="refreshButton" class="icon-button refresh" title="Actualiser les données" aria-label="Actualiser les données">↻</button></div>
+      </header>
+      <div class="content">
+        <div id="globalError" role="alert" class="error-banner" hidden></div>
+
+        <section class="view" data-section="overview">
+          <div class="section-heading"><div><span class="eyebrow">OPERATIONS CENTER <span class="mini-line"></span> LIVE DATA</span><h1>Fleet overview<span class="heading-dot">.</span></h1><p>Surveillance prédictive et priorisation des moteurs en service.</p></div><div class="heading-actions"><span class="updated" id="lastUpdated">En attente des données…</span><button class="btn btn-outline" id="exportButton">↓ Exporter CSV</button></div></div>
+          <div class="hero">
+            <div class="hero-copy"><div class="hero-pill"><span class="pulse-dot"></span> Maintenance intelligence platform</div><h2>Des données moteurs.<br><span>Des décisions éclairées.</span></h2><p>Suivez l’état du parc, identifiez les inspections prioritaires et interrogez le copilote IA avec une validation humaine au bon endroit.</p><button class="btn btn-light" data-jump="fleet">Explorer la flotte <span>↗</span></button></div>
+            <div class="hero-art" aria-hidden="true"><div class="orbital orbital-one"></div><div class="orbital orbital-two"></div><svg viewBox="0 0 560 290" fill="none"><path d="M32 148L256 128L350 37L387 35L345 134L500 149L513 169L342 175L384 266L351 263L252 180L32 165L16 157Z" stroke="#82D8D4" stroke-width="2.2" fill="#85c6cb" fill-opacity=".07"/><path d="M37 155L502 160M254 133L343 174M346 136L254 178" stroke="#82D8D4" stroke-opacity=".7" stroke-width="1.2" stroke-dasharray="7 7"/><circle cx="270" cy="158" r="6" fill="#5BE0D6"/><circle cx="270" cy="158" r="15" stroke="#5BE0D6" stroke-opacity=".4"/><path d="M400 78H532M429 228H541" stroke="#7FB6C7" stroke-opacity=".55" stroke-dasharray="3 5"/><circle cx="400" cy="78" r="3" fill="#5BE0D6"/><circle cx="429" cy="228" r="3" fill="#5BE0D6"/></svg><span class="hero-art-tag art-top">PREDICTIVE MAINTENANCE <b>● ONLINE</b></span><span class="hero-art-tag art-bottom">ENGINE HEALTH ANALYTICS</span></div>
+          </div>
+
+          <div class="metrics" id="metrics">
+            <article class="metric skeleton"><div class="metric-top"><span>Total moteurs analysés</span><i>↗</i></div><strong>—</strong><small>Chargement des données réelles</small></article>
+            <article class="metric skeleton"><div class="metric-top"><span>Inspection prioritaire</span><i>!</i></div><strong>—</strong><small>En attente des flottes</small></article>
+            <article class="metric skeleton"><div class="metric-top"><span>Inspection à planifier</span><i>◷</i></div><strong>—</strong><small>En attente des flottes</small></article>
+            <article class="metric skeleton"><div class="metric-top"><span>Flottes disponibles</span><i>▦</i></div><strong>—</strong><small>En attente de l’API</small></article>
+          </div>
+
+          <div class="overview-grid">
+            <section class="panel fleet-panel"><div class="panel-title"><div><h3>État des flottes</h3><p>Répartition par niveau de priorité</p></div><span class="panel-icon">◉</span></div><div id="overviewFleets" class="fleet-overview"><p class="empty">Chargement des flottes…</p></div></section>
+            <section class="panel priorities-panel"><div class="panel-title"><div><h3>Priorités d’inspection</h3><p>Moteurs classés selon le RUL estimé</p></div><button class="text-button" data-jump="fleet">Tout voir ↗</button></div><div id="priorityRows"><p class="empty">Chargement des moteurs…</p></div></section>
+          </div>
+          <div class="overview-grid lower-grid">
+            <section class="panel trend-panel"><div class="panel-title"><div><h3>Évolution de la durée de vie résiduelle</h3><p id="trendSubtitle">Sélectionnez un moteur pour afficher ses cycles</p></div><span class="chart-key"><i></i> RUL estimé</span></div><div id="overviewChart" class="chart-wrap"><div class="empty">Sélectionnez un moteur</div></div></section>
+            <section class="panel spotlight-panel"><div class="panel-title"><div><h3>Moteur suivi</h3><p>Dernière évaluation du modèle</p></div><span class="panel-icon">↗</span></div><div id="spotlight" class="spotlight"><p class="empty">Chargement de l’évaluation…</p></div></section>
+          </div>
+        </section>
+
+        <section class="view" data-section="fleet" hidden>
+          <div class="section-heading"><div><span class="eyebrow">ASSET MONITORING</span><h1>Parc moteurs<span class="heading-dot">.</span></h1><p>Analyse détaillée des flottes FD001 à FD004, avec données NASA C-MAPSS.</p></div><div class="heading-actions"><button id="fleetExportButton" class="btn btn-outline">↓ Exporter CSV</button></div></div>
+          <div id="fleetCards" class="fleet-cards"></div>
+          <div class="fleet-workspace">
+            <div class="fleet-table-panel panel"><div class="panel-title"><div><h3 id="fleetTableTitle">Inventaire moteurs</h3><p>Classement des moteurs selon leur niveau d’attention</p></div><span id="engineCountLabel" class="count-pill">—</span></div><div class="filters"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Rechercher un identifiant moteur…" aria-label="Rechercher un moteur"></label><label class="filter-select"><span>Statut</span><select id="statusFilter" aria-label="Filtrer par statut"><option value="all">Tous les statuts</option><option value="inspect_now">Inspection urgente</option><option value="plan_inspection">À planifier</option><option value="healthy">Surveillance normale</option></select></label></div><div class="table-scroller"><table class="data-table"><thead><tr><th>MOTEUR</th><th>STATUT</th><th>RUL ESTIMÉ</th><th>INTERVALLE 80 %</th><th>CONFIANCE</th><th></th></tr></thead><tbody id="engineRows"><tr><td colspan="6" class="empty">Chargement…</td></tr></tbody></table></div></div>
+            <section class="panel engine-panel"><div class="panel-title"><div><h3>Diagnostic moteur</h3><p>Analyse des cycles et capteurs</p></div><span class="panel-icon">⌁</span></div><div id="engineDetails" class="engine-details"><p class="empty">Sélectionnez un moteur</p></div></section>
+          </div>
+        </section>
+
+        <section class="view" data-section="assistant" hidden>
+          <div class="section-heading"><div><span class="eyebrow">AI DECISION SUPPORT</span><h1>Copilote IA<span class="heading-dot">.</span></h1><p>Posez des questions contextualisées sur les données réelles de l’API.</p></div></div>
+          <div class="assistant-layout">
+            <div class="panel assistant-main"><div class="assistant-banner"><span class="assistant-glyph">✧</span><div><h2>Votre copilote de maintenance</h2><p>Réponses fondées sur les évaluations du moteur sélectionné. Les recommandations n’autorisent aucune décision de navigabilité.</p></div></div>
+              <form id="askForm"><div class="field-row"><label for="assistantFleet">Flotte</label><select id="assistantFleet" required></select><label for="assistantEngine">Moteur</label><select id="assistantEngine" required></select></div><label class="input-label" for="questionInput">Votre question</label><textarea id="questionInput" minlength="3" maxlength="500" required rows="4" placeholder="Quel est le RUL du moteur sélectionné et faut-il prévoir une inspection ?"></textarea><div class="assistant-form-foot"><span>Interprétation IA sous contrôle humain · 500 caractères max</span><button class="btn btn-primary" id="askButton" type="submit">✧ Analyser le moteur <span>↗</span></button></div></form>
+              <div id="aiOutput" class="ai-output" aria-live="polite"><div class="ai-placeholder"><span>✧</span><strong>Prêt pour une analyse</strong><p>Choisissez un moteur et posez votre question. La réponse proviendra de l’API AWS, sans données inventées.</p></div></div>
+            </div>
+            <aside class="panel assistant-side"><div class="panel-title"><div><h3>À propos du système</h3><p>Contexte de la réponse IA</p></div></div><div class="side-feature"><span>01</span><div><strong>Données vérifiables</strong><p>Prédictions RUL, intervalles de confiance et cycles issus de l’API.</p></div></div><div class="side-feature"><span>02</span><div><strong>Contrôle des actions</strong><p>La politique peut exiger une validation humaine. Aucun ordre de travail n’est émis par cette interface.</p></div></div><div class="side-feature"><span>03</span><div><strong>Transparence technique</strong><p>Les réponses présentent le modèle utilisé, la latence et un éventuel mécanisme de repli.</p></div></div><div class="compliance-note"><b>⚑ AVERTISSEMENT</b><p>Projet de recherche sur données simulées. Ne pas utiliser pour les décisions de vol ou de maintenance réelle.</p></div></aside>
+          </div>
+        </section>
+
+        <section class="view" data-section="audit" hidden>
+          <div class="section-heading"><div><span class="eyebrow">POLICY & OBSERVABILITY</span><h1>Journal d’audit<span class="heading-dot">.</span></h1><p>Consultez les derniers appels d’outils enregistrés par la passerelle de contrôle.</p></div><div class="heading-actions"><button class="btn btn-outline" id="auditRefresh">↻ Actualiser</button></div></div>
+          <div class="panel audit-panel"><div class="panel-title"><div><h3>Activité de la passerelle</h3><p>Les données de cet endpoint sont locales à l’instance AWS Lambda et ne constituent pas un registre permanent.</p></div><span class="panel-icon">≡</span></div><div class="table-scroller"><table class="data-table"><thead><tr><th>DATE</th><th>OUTIL</th><th>DÉCISION</th><th>MOTEUR</th><th>MOTIF</th></tr></thead><tbody id="auditRows"><tr><td colspan="5" class="empty">Ouverture du journal…</td></tr></tbody></table></div></div>
+        </section>
+
+        <footer class="page-footer"><span>© 2026 AeroMRO · Predictive Maintenance Intelligence</span><span>Research prototype · NASA C-MAPSS · Not certified for airworthiness decisions</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
