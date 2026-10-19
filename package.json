@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:ui": "node --check app.js && node --check premium.js && node --check api/proxy.js && node --test tests/ui-smoke.test.mjs tests/frontend-contract.test.mjs tests/operator-workflow.test.mjs"
+    "test:ui": "node --check app.js && node --check premium.js && node --check aircraft-gallery.js && node --check api/proxy.js && node --test tests/ui-smoke.test.mjs tests/frontend-contract.test.mjs tests/operator-workflow.test.mjs"
   },
   "engines": {
     "node": ">=20"
