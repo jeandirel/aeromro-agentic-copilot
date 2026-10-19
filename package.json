@@ -1,0 +1,12 @@
+{
+  "name": "aeromro-operations-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ui": "node --check app.js && node --check api/proxy.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
