@@ -208,3 +208,9 @@ body{background:radial-gradient(ellipse 75% 38% at 86% 0%,#e1edf4 0,transparent 
  .sidebar.open{transform:translateX(0)}
 }
 @media(prefers-reduced-motion:reduce){.hero-engine-image,.showcase-item img{transition:none}}
+
+/* Resilient photo treatments and tablet layout */
+.hero-art.image-unavailable{background:radial-gradient(circle at 70% 50%,#21465b 0%,#0a2236 58%,#071829 100%)}
+.showcase-item.image-unavailable{background:linear-gradient(115deg,#123e52,#071625)}
+.engine-cover.image-unavailable,.copilot-photo.image-unavailable{background:linear-gradient(135deg,#123447,#071b2b)}
+@media(max-width:1100px){.assistant-side{display:block}}
