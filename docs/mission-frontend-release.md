@@ -3,16 +3,18 @@ _Date: 19 October 2026. Branch: `feat/ultimate-operations-experience-20261019`._
 
 ## Architecture decision
 
-Retain the current dependency-free HTML/CSS/JavaScript frontend and the existing Vercel serverless `api/proxy.js` gateway. Four functional workspaces and documented Node smoke tests already exist; a Next.js migration would introduce a build/runtime change without a demonstrated functional benefit at this stage. The additional `mission.css` layer provides a restrained, aviation-focused visual identity. Existing `styles.css` and `premium.css` remain for immediate rollback and compatibility; consolidating the CSS is a later cleanup.
+Retain the current dependency-free HTML/CSS/JavaScript frontend and the existing Vercel serverless `api/proxy.js` gateway. Four functional workspaces and documented Node smoke tests already exist; a Next.js migration would introduce a build/runtime change without a demonstrated functional benefit at this stage. The `mission.css` and `control-room.css` layers retain a restrained visual identity while moving operational triage ahead of all decoration. Existing `styles.css` and `premium.css` remain for immediate rollback and compatibility; consolidating the CSS is a later cleanup.
 
-- Overview: four fleet summaries and server-derived totals; load each fleet's engine list for the five lowest RUL estimates across available fleets, and select the correct fleet when navigating to an engine.
+- Mission Control: one cross-fleet triage queue for eight engines ordered first by backend status severity, then by remaining predicted RUL; interval at 80%, cycles already flown, and direct engine selection. A current-engine analytical panel and live API coverage strip expose operational context before secondary KPI cards.
+- Overview: four fleet summaries and server-derived totals; load engine lists from each subset, explicitly flag partial coverage and avoid stale refresh cache. The first engine selected from a fleet is the highest-priority assessment, not an arbitrary first record.
 - Engine analytics: searchable, status-filtered, sortable inventory; explicit RUL remaining versus cycles flown; interactive charts for actual historical sensor fields.
+- In-context analysis: diagnostic and active-engine panels provide direct RUL, uncertainty and sensor question actions. The selected fleet and engine are preserved in the request; actions initiate POST `/ask` using the existing protected gateway, never a local canned AI answer.
 - Copilot: the existing POST `/ask` is the sole source of answers. The structured `engine` object is presented before the free-text answer; policy, approval requirement, model and actual fallback are displayed. Per-page session conversation can be cleared; there is no claim of server-side history.
 - Audit: GET `/audit` is instance-local and volatile; not an immutable, comprehensive or permanent record.
 
 ## Visual and interaction guidelines
 
-Clear operational information before decoration. Dark navigation, light workspaces, a documentary turbine hero photo, sober tables, monospace engineering numbers, explicit C-MAPSS simulation labeling, reliable keyboard focus, reduced motion and mobile reflow. Photos are editorial illustrations, never evidence of the engine's condition. Prefer source-labelled imagery and graceful fallback; final licensing review is needed before commercial reuse.
+Clear operational information before decoration. Decorative hero photography, promotional showcase and turbine photos in the engine diagnostic have been removed. The application starts with a triage queue and current engine assessment. Dark navigation, light workspaces, restrained status signaling, monospace engineering values, C-MAPSS simulation labeling, keyboard skip link, visible focus, reduced motion and mobile reflow are preserved. Do not portray simulated/historical C-MAPSS readings as live aircraft telemetry.
 
 ## Data integrity and security
 
@@ -29,18 +31,28 @@ Clear operational information before decoration. Dark navigation, light workspac
   - FD001 / ENG-81: urgent; 3.0 cycles **remaining**, 213 already flown, prediction interval 0.3–12.9, policy `allow`, no declared fallback; model `eu.amazon.nova-2-lite-v1:0`.
   - FD001 / ENG-17: healthy; 53.4 cycles **remaining**, 165 already flown, prediction interval 43.4–60.1, policy `allow`, no declared fallback; same model.
   - Tests confirm existing production behaviour; **they are not E2E proof of the new protected preview**.
-- UI GitHub Action passed syntax and Node proxy/frontend contract tests. Python 3.11/3.12 lint/tests and standard Docker job passed. Full CI remained red because building the Lambda image hit registry `public.ecr.aws` HTTP 429 rate limiting while pulling its base image, not because of an application assertion.
-- Vercel preview build: READY. Preview is access protected, so unauthenticated desktop/mobile browser capture and interactive E2E validation are outstanding. Production promotion is gated until these controls can be completed.
+- Earlier PR head `b3dc3ef` subsequently passed UI and full CI. The revised Mission Control head requires a fresh completed UI and full CI run before release. Prior full CI failure due to ECR 429 was transient and not an application test failure.
+- Earlier preview build: READY, but access protected. After the latest changes the connected Vercel project scope returned HTTP 403 `forbidden`; the new preview cannot currently be independently inspected. Responsive/browser E2E and preview copilot replay are therefore not yet verified. Production promotion is gated.
 
 ## Outstanding work before publishing
 
 1. Test the protected preview with authenticated desktop and mobile browsing, capture screenshots and verify focus, contrast, images, CSS and console/network errors.
 2. Replay real `/ask` questions from distinct RUL statuses **on preview**, including 429, 401/502 and fallback cases when safe and verifiable (never fabricate a fallback).
 3. Retry the GitHub Lambda image CI job after registry 429 recovers; preserve provenance of images.
-4. Review photograph licenses, external asset availability and cross-browser responsiveness.
+4. Check responsive layouts, tab/focus navigation, screen reader naming, semantic status and cross-browser behavior. External marketing photos have been removed from the operator console.
 5. Review operational authentication, app-level rate limiting, observability and human approval requirements before proposing use outside a research environment.
 6. Once all required checks pass, merge the PR and verify the production deployment; rollback to the previous Vercel production deployment if required.
 
 ## Rollback
 
 Do not modify the existing production alias before passing gates. The production Vercel deployment from `main` remains the rollback baseline. Revert the PR or promote the previous stable production deployment using Vercel's deployment history in case of a later rollout regression.
+
+## Operator workflow contract — Mission Control V2
+
+1. User opens the control center. API health and fleet subset data are queried, and the triage queue ranks server-computed statuses and RUL without local ML inference.
+2. User selects an engine from the triage queue, which switches fleet when necessary; the diagnostic chart and selected context are retrieved via the existing AWS API.
+3. User may request analysis of risk, uncertainty or sensors from inside the diagnostic. The relevant fleet and unit are supplied to POST /ask; the response shows backend facts, generated narrative, model metadata and approval policy distinctly.
+4. User may consult a volatile server audit, labeled explicitly as non-durable. No work orders, approvals, avionics changes, flights or maintenance actions are ever triggered.
+5. On any incomplete fleet fetch, the triage queue shows an explicit warning and displays only fresh, available fleet records; the ribbon shows how many fleets were read.
+
+**Design references:** NASA Open MCT (https://ammos.nasa.gov/openmct/), NASA Appendix F Display Standard (https://www.nasa.gov/reference/appendix-f-vol-2/). References are principles, not NASA approval, certification or affiliation.
