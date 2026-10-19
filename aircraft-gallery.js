@@ -9,8 +9,8 @@ const AIRCRAFT_MODELS = Object.freeze([
     code:"A320", family:"Airbus", name:"A320",
     category:"Monocouloir", use:"Opérations de maintenance en ligne",
     detail:"Une plateforme d'analyse peut rassembler les événements techniques, les historiques et les tendances pour faciliter la préparation des interventions.",
-    photo:"https://commons.wikimedia.org/wiki/Special:FilePath/Airbus_A320_%281%29.jpg?width=1100",
-    large:"https://commons.wikimedia.org/wiki/Special:FilePath/Airbus_A320_%281%29.jpg?width=1600",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/e/eb/Airbus_A320_%281%29.jpg",
+    large:"https://upload.wikimedia.org/wikipedia/commons/e/eb/Airbus_A320_%281%29.jpg",
     credit:"Mathious Ier · CC0 1.0",
     creditLink:"https://commons.wikimedia.org/wiki/File:Airbus_A320_(1).jpg",
   },
@@ -18,8 +18,8 @@ const AIRCRAFT_MODELS = Object.freeze([
     code:"A350", family:"Airbus", name:"A350-900",
     category:"Long-courrier", use:"Fiabilité et tendances moteur",
     detail:"Les tableaux de fiabilité et les indicateurs de maintenance prédictive sont des scénarios pertinents pour des opérateurs long-courriers.",
-    photo:"https://commons.wikimedia.org/wiki/Special:FilePath/Airbus_A350_%C3%A0_Charles_de_Gaulle_CDG.jpg?width=1100",
-    large:"https://commons.wikimedia.org/wiki/Special:FilePath/Airbus_A350_%C3%A0_Charles_de_Gaulle_CDG.jpg?width=1600",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/9/93/Airbus_A350_%C3%A0_Charles_de_Gaulle_CDG.jpg",
+    large:"https://upload.wikimedia.org/wikipedia/commons/9/93/Airbus_A350_%C3%A0_Charles_de_Gaulle_CDG.jpg",
     credit:"Mathious Ier · CC0 1.0",
     creditLink:"https://commons.wikimedia.org/wiki/File:Airbus_A350_à_Charles_de_Gaulle_CDG.jpg",
   },
@@ -27,8 +27,8 @@ const AIRCRAFT_MODELS = Object.freeze([
     code:"B787", family:"Boeing", name:"787 Dreamliner",
     category:"Long-courrier", use:"Diagnostic de systèmes et composants",
     detail:"L'investigation des événements techniques et le suivi de l'état des équipements sont des usages envisageables après intégration de sources constructeur et opérateur.",
-    photo:"https://commons.wikimedia.org/wiki/Special:FilePath/Boeing_787.jpg?width=1100",
-    large:"https://commons.wikimedia.org/wiki/Special:FilePath/Boeing_787.jpg?width=1600",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Boeing_787.jpg",
+    large:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Boeing_787.jpg",
     credit:"Mathious Ier · CC0 1.0",
     creditLink:"https://commons.wikimedia.org/wiki/File:Boeing_787.jpg",
   },
@@ -36,8 +36,8 @@ const AIRCRAFT_MODELS = Object.freeze([
     code:"B777", family:"Boeing", name:"777-200",
     category:"Long-courrier", use:"Planification et anticipation des risques",
     detail:"Une future intégration MRO pourrait lier les tendances de dégradation aux dossiers de maintenance et à une validation par les équipes techniques.",
-    photo:"https://commons.wikimedia.org/wiki/Special:FilePath/Boeing_777-AA.jpg?width=1100",
-    large:"https://commons.wikimedia.org/wiki/Special:FilePath/Boeing_777-AA.jpg?width=1600",
+    photo:"https://upload.wikimedia.org/wikipedia/commons/9/93/Boeing_777-AA.jpg",
+    large:"https://upload.wikimedia.org/wikipedia/commons/9/93/Boeing_777-AA.jpg",
     credit:"Adrian Pingstone · Domaine public",
     creditLink:"https://commons.wikimedia.org/wiki/File:Boeing_777-AA.jpg",
   },
@@ -88,6 +88,7 @@ h2{font-size:clamp(23px,2.35vw,32px);letter-spacing:-1.25px;line-height:1.18;mar
 .model-footer span{font-size:10px;color:#657f8b;line-height:1.4}
 .model-footer button{border:0;background:#e9f2f4;color:#1f6371;padding:8px 10px;border-radius:5px;font-size:10px;font-weight:750;white-space:nowrap}
 .model-footer button:hover{background:#d6eaec}
+.photo-credit{display:inline-block;margin-top:12px;color:#6f8995;font:600 10px "DM Sans",system-ui,sans-serif;text-underline-offset:2px}
 .disclaimer{margin-top:21px;border:1px solid #d8e6e7;border-radius:8px;background:#f1f7f7;display:flex;gap:10px;align-items:start;padding:13px 15px;color:#5b7581;font-size:11px;line-height:1.6}
 .disclaimer .dot{width:7px;height:7px;margin-top:5px;flex:none;border-radius:50%;background:#388e93}
 dialog{border:1px solid #d7e3e6;border-radius:14px;padding:0;background:#fff;width:min(650px,calc(100vw - 30px));max-height:90vh;overflow:auto;box-shadow:0 25px 90px #0c2a3d50}
@@ -157,6 +158,7 @@ dialog::backdrop{background:#0a1f30b3;backdrop-filter:blur(3px)}
           <div class="model-footer"><span>${model.use}</span>
             <button type="button" data-model="${model.code}" aria-label="Découvrir les usages pour ${model.family} ${model.name}">Découvrir ↗</button>
           </div>
+          <a class="photo-credit" href="${model.creditLink}" target="_blank" rel="noopener noreferrer" aria-label="Crédit et source photo ${model.family} ${model.name}">Source photo ↗</a>
         </div>
       </article>`).join("");
     this.#bindImages(list);
