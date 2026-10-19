@@ -50,6 +50,12 @@ async function init(refresh = false) {
   if (state.loading) return;
   toggleLoading(true);
   clearError();
+  const preservedFleet=state.fleet, preservedUnit=state.unit;
+  // Fail closed for operational values: on a failed refresh, do not present stale
+  // RUL or a formerly selected engine as if it came from the current API call.
+  state.fleets=[]; state.health=null; state.enginesByFleet={};
+  state.thresholdsByFleet={}; state.failedFleets=[];
+  state.unit=null; state.detail=null; state.fleet=null; state.loadedAt=null;
   try {
     const [health, fleets] = await Promise.all([api("/health"), api("/fleets")]);
     if (!Array.isArray(fleets)) throw new Error("Structure des flottes inattendue.");
@@ -60,12 +66,12 @@ async function init(refresh = false) {
     state.thresholdsByFleet = {};
     state.failedFleets = [];
     connection(true);
-    const wanted = refresh && state.fleet ? state.fleet : fleets[0]?.subset;
+    const wanted = refresh && preservedFleet ? preservedFleet : fleets[0]?.subset;
     if (!wanted) {
       state.fleet = null; state.unit = null; state.detail = null;
       state.enginesByFleet = {};
     } else {
-      await loadFleet(wanted, { fresh: true, keepUnit: refresh, quiet: true });
+      await loadFleet(wanted, { fresh: true, keepUnit: refresh, preserveUnit: preservedUnit, quiet: true });
       // Load all available fleets for genuinely fleet-wide inspection priorities.
       // A failed secondary fleet never replaces its data with invented values.
       const otherFleets = fleets.map((f) => f.subset).filter((id) => id !== wanted && /^FD00[1-4]$/.test(id));
@@ -89,7 +95,7 @@ async function init(refresh = false) {
 }
 async function loadFleet(subset, opts = {}) {
   if (!/^FD00[1-4]$/.test(subset)) return;
-  const previousUnit = state.unit;
+  const previousUnit = opts.preserveUnit ?? state.unit;
   state.fleet = subset;
   if (!state.enginesByFleet[subset] || opts.fresh) {
     const response = await api("/fleets/" + subset + "/engines");
@@ -136,10 +142,10 @@ function totals() {
 function metrics() {
   const t = totals();
   const cards = [
-    { label: "Moteurs analysés", value: num(t.engines), note: "Ensemble des flottes disponibles", icon: "↗", kind: "" },
-    { label: "Inspections prioritaires", value: num(t.critical), note: "Selon le seuil d’inspection de l’API", icon: "!", kind: "danger" },
-    { label: "Inspections à planifier", value: num(t.planned), note: "Selon les seuils de l’API", icon: "◷", kind: "caution" },
-    { label: "Flottes disponibles", value: num(state.fleets.length), note: "Moteurs simulés C-MAPSS", icon: "▦", kind: "safe" },
+    { label: "Moteurs analysés", value: state.fleets.length ? num(t.engines) : "—", note: "Ensemble des flottes disponibles", icon: "↗", kind: "" },
+    { label: "Inspections prioritaires", value: state.fleets.length ? num(t.critical) : "—", note: "Selon le seuil d’inspection de l’API", icon: "!", kind: "danger" },
+    { label: "Inspections à planifier", value: state.fleets.length ? num(t.planned) : "—", note: "Selon les seuils de l’API", icon: "◷", kind: "caution" },
+    { label: "Flottes disponibles", value: state.fleets.length ? num(state.fleets.length) : "—", note: "Moteurs simulés C-MAPSS", icon: "▦", kind: "safe" },
   ];
   $("metrics").innerHTML = cards.map((c) => '<article class="metric ' + c.kind + '"><div class="metric-top"><span>' + c.label + '</span><i>' + c.icon + '</i></div><strong>' + c.value + '</strong><small>' + c.note + "</small></article>").join("");
 }
@@ -169,8 +175,8 @@ function priorities() {
 }
 function controlRoom() {
   const t=totals();
-  $("ribbonCritical").textContent=num(t.critical);
-  $("ribbonPlan").textContent=num(t.planned);
+  $("ribbonCritical").textContent=state.fleets.length ? num(t.critical) : "—";
+  $("ribbonPlan").textContent=state.fleets.length ? num(t.planned) : "—";
   $("ribbonActive").textContent=state.unit!=null ? (state.fleet+" / ENG–"+state.unit) : "Aucun moteur";
   $("ribbonSync").textContent=state.loadedAt ? state.loadedAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+" · "+Object.keys(state.enginesByFleet).length+"/"+state.fleets.length+" flottes" : "En attente API";
   const e=selectedAssessment();
