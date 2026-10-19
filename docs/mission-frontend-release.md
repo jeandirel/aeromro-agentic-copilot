@@ -56,3 +56,42 @@ Do not modify the existing production alias before passing gates. The production
 5. On any incomplete fleet fetch, the triage queue shows an explicit warning and displays only fresh, available fleet records; the ribbon shows how many fleets were read.
 
 **Design references:** NASA Open MCT (https://ammos.nasa.gov/openmct/), NASA Appendix F Display Standard (https://www.nasa.gov/reference/appendix-f-vol-2/). References are principles, not NASA approval, certification or affiliation.
+
+
+## Design and component-selection review (20 October 2026)
+
+**Sources reviewed:** Airbus Skywise Health Monitoring and Fleet Performance (airbus.com, skywise.com); Lufthansa Technik AVIATAR Predictive Health Analytics and Engineering Analytics Suite; shadcn/ui Sidebar/Data Table/Chart; Radix primitives; NASA C-MAPSS documentation. These are references, not endorsements, copied product surfaces or claims of NASA acceptance.
+
+**Design positioning.** Two intentionally separate surfaces:
+1. **Operator console** — high information density where necessary, task-oriented triage, RUL details and AI explanations with provenance. No irrelevant hero image or company logos.
+2. **Industry showcase** — optional fifth workspace. A carefully scoped `<aero-aircraft-gallery>` Web Component provides real model-specific documentary photos, producer filters, responsive model cards, an accessible native `<dialog>` details sheet and links to source/photo credits. No OEM affiliation or actual aircraft telemetry claimed.
+
+**Implementation choice.** Preserve the existing zero-build, server-rendered-static interface and AWS gateway for this incremental PR. Encapsulate new interactive visual features as standards-based Custom Elements with Shadow DOM, without copy-pasted Bootstrap cards, runtime CDN dependencies or an uncontrolled React migration. The aircraft gallery is independent from API and imported by one explicit script; the global app still owns operational data. This makes the new component testable independently and minimizes regressions.
+
+### Library evaluation for future modular frontend migration
+
+| Interaction | Design reference / library | Decision |
+|---|---|---|
+| Application sidebar + keyboard-friendly navigation | shadcn/ui Sidebar (Radix or Base UI) | Evaluate for a dedicated React migration; keep existing native nav in current code |
+| Engine inventory / 707 simulated engines | TanStack Table with column filters, sorting, virtualization where needed | Target architecture; existing sort and filter remain real until migration |
+| RUL + sensor time series, brush, crosshair, linked axes | Apache ECharts or Recharts 3 / shadcn Chart | Future chart upgrade only after benchmark and validation against the actual backend history fields |
+| Aircraft model and photography card | Native Web Component and semantic dialog, responsive photo composition | **Implemented** without lying about mappings to NASA engine IDs |
+| AI copilot | Structured API facts, policy, narrative separated | Existing `POST /ask` integration maintained; actions preserve selected engine |
+| Maintenance work order cards and Kanban | TanStack Table, dnd-kit, Radix Dialog after role permissions | **Not implemented**. Requires work-order API, persistence, roles, validation workflows and audit, not mock cards |
+| OEM / MRO prospect names | Plain text, labelled targets | Prospect use cases only; do not use trademarks to imply partnership |
+
+### Photograph sources and licensing
+- Airbus A320 — Mathious Ier, Creative Commons Zero 1.0: https://commons.wikimedia.org/wiki/File:Airbus_A320_(1).jpg
+- Airbus A350 — Mathious Ier, Creative Commons Zero 1.0: https://commons.wikimedia.org/wiki/File:Airbus_A350_à_Charles_de_Gaulle_CDG.jpg
+- Boeing 787 — Mathious Ier, Creative Commons Zero 1.0: https://commons.wikimedia.org/wiki/File:Boeing_787.jpg
+- Boeing 777 — Adrian Pingstone, public domain: https://commons.wikimedia.org/wiki/File:Boeing_777-AA.jpg
+
+The component links to source/credits. Sources should be rechecked prior to commercial usage; offsite Wikimedia asset loading currently needs real-browser confirmation. CSP `img-src` restricts external photos to the respective Wikimedia origins plus previously allowed editorial origins. A graceful fallback is shown when unavailable. Do not add images of Airbus A350 to FD001 / engine 81: C-MAPSS sets have **no aircraft type or registration**.
+
+### Exit criteria before a claim of premium production readiness
+
+1. Validate that every external image resolves and is correctly associated with its model, including src redirects and content-security policy.
+2. Check navigation and gallery filtering, accessible dialog close (button/Escape), keyboard, focus management, desktop 1440px/tablet 820px/mobile 390px; perform actual browser testing, not only static contract tests.
+3. Test AWS /health, /fleets, /engine history and /ask on **the new preview**, differentiate backed facts from generated narrative and fallback.
+4. Maintain explicit prototype labelling. No made-up 42-aircraft fleets, AOG queues, FAAs approvals or ARINC 429 feeds.
+5. Keep PR draft until browser testing and approved publication; preserve previous production deployment for rollback.
