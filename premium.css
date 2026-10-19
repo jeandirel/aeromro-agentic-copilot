@@ -214,3 +214,20 @@ body{background:radial-gradient(ellipse 75% 38% at 86% 0%,#e1edf4 0,transparent 
 .showcase-item.image-unavailable{background:linear-gradient(115deg,#123e52,#071625)}
 .engine-cover.image-unavailable,.copilot-photo.image-unavailable{background:linear-gradient(135deg,#123447,#071b2b)}
 @media(max-width:1100px){.assistant-side{display:block}}
+
+/* Machine-verifiable evidence is visually separated from generative prose. */
+.copilot-model-trace{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:15px}
+.copilot-model-trace span{padding:7px 10px;border:1px solid #dbe6ed;border-radius:7px;background:#f7fbfd;color:#426578;font-weight:700;font-size:10px}
+.copilot-model-trace .trace-fallback{background:#fff4e5;border-color:#f1ddb7;color:#986d22}
+.copilot-verified-facts{border:1px solid #c3e1dd;background:linear-gradient(135deg,#f1fbf9,#ffffff 85%);border-radius:13px;padding:16px;margin-bottom:18px}
+.verified-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #d7eae7}
+.verified-head strong{color:#096f75;font:800 11px Manrope,sans-serif}
+.verified-head small{font-size:10px;color:#68959c}
+.verified-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-top:14px}
+.verified-values>div{border:1px solid #e0eeee;background:#ffffffdb;padding:11px 12px;border-radius:10px;min-width:0}
+.verified-values span{color:#7996a2;font-size:10px;display:block;margin-bottom:7px}
+.verified-values strong{color:#12394d;font:800 18px Manrope,sans-serif;white-space:nowrap}
+.verified-values .status{font-size:9px;white-space:normal}
+.copilot-verified-facts p{font-size:10px;color:#66818c;line-height:1.7;margin:14px 0 0}
+.copilot-analysis-label{font:800 9px Manrope,sans-serif;letter-spacing:1.55px;color:#3d8090;margin:18px 0 11px}
+@media(max-width:760px){.verified-head{align-items:flex-start;flex-direction:column;gap:5px}.verified-values{gap:7px}.verified-values>div{padding:10px}.verified-values strong{font-size:14px}.copilot-model-trace span{font-size:9px}}

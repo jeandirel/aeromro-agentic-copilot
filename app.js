@@ -9,7 +9,7 @@ const state = {
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v, digits = 0) => Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits: digits }) : "—";
-const statusText = { inspect_now: "Inspection prioritaire", plan_inspection: "À planifier", healthy: "Surveillance normale", allow: "Autorisé", require_approval: "Validation humaine", deny: "Refusé" };
+const statusText = { inspect_now: "Inspection prioritaire", plan_inspection: "À planifier", healthy: "Surveillance normale", allow: "Recommandation permise", require_approval: "Validation humaine", deny: "Refusé" };
 const tag = (s) => '<span class="status ' + esc(s) + '">' + esc(statusText[s] || s || "Inconnu") + "</span>";
 const activeFleet = () => state.fleets.find((f) => f.subset === state.fleet);
 const activeEngines = () => state.enginesByFleet[state.fleet] || [];
@@ -236,7 +236,13 @@ function renderChat(pending = false) {
       "Jetons : " + num((u.input_tokens || 0) + (u.output_tokens || 0)),
     ];
     if (entry.fallbackReason) tags.push("Mode de repli actif : " + entry.fallbackReason);
-    return '<article class="chat-message assistant"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>' + esc(entry.subset) + ' · ENG–' + esc(entry.unit) + '</span>' + tag(decision) + '</div><div class="chat-text">' + esc(entry.answer) + '</div><div class="chat-policy ' + esc(decision) + '">' + esc(policyMessage) + '</div><div class="chat-source">Données d’évaluation NASA C-MAPSS · API /ask · informations simulées</div><div class="chat-meta">' + tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div></div></article>';
+    const m = entry.engine || {};
+    const hasFacts = Number.isFinite(Number(m.rul)) && Number.isFinite(Number(m.rul_low)) && Number.isFinite(Number(m.rul_high));
+    const factsHtml = hasFacts
+      ? '<div class="copilot-verified-facts"><div class="verified-head"><strong>↗ Valeurs fournies par le modèle RUL</strong><small>Résultat structuré de l’API AWS</small></div><div class="verified-values"><div><span>Cycles restants (RUL)</span><strong>' + num(m.rul, 1) + '</strong></div><div><span>Intervalle prévisionnel 80 %</span><strong>' + num(m.rul_low, 1) + ' – ' + num(m.rul_high, 1) + '</strong></div><div><span>Cycles déjà parcourus</span><strong>' + num(m.cycles_flown) + '</strong></div><div><span>Priorité calculée</span>' + tag(m.status) + '</div></div><p>La priorité compare les <strong>cycles restants</strong> aux seuils ; elle ne compare pas les cycles déjà parcourus. Le texte généré par l’IA peut contenir des erreurs d’interprétation.</p></div>'
+      : '<div class="chat-policy deny">Les valeurs RUL structurées ne sont pas disponibles : ne prenez aucune décision à partir de ce texte.</div>';
+    const trace = '<div class="copilot-model-trace"><span>✧ ' + esc(u.model || "Modèle non identifié") + '</span><span>◷ ' + num(u.latency_ms, 1) + ' ms</span>' + (entry.fallbackReason ? '<span class="trace-fallback">Mode de repli : ' + esc(entry.fallbackReason) + '</span>' : '<span>Réponse obtenue sans repli déclaré</span>') + '</div>';
+    return '<article class="chat-message assistant"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>' + esc(entry.subset) + ' · ENG–' + esc(entry.unit) + '</span>' + tag(decision) + '</div>' + trace + factsHtml + '<div class="copilot-analysis-label">SYNTHÈSE IA · INTERPRÉTATION NON CERTIFIÉE</div><div class="chat-text">' + esc(entry.answer) + '</div><div class="chat-policy ' + esc(decision) + '">' + esc(policyMessage) + '</div><div class="chat-source">Données NASA C-MAPSS simulées · API /ask · aucune décision de vol</div><div class="chat-meta">' + tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div></div></article>';
   };
   const waiting = pending ? '<article class="chat-message pending"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>Analyse en cours</span></div><div>Interrogation du service IA AWS… <span aria-label="Patientez">◌</span></div></div></article>' : "";
   target.innerHTML = '<div class="ai-thread">' + chatHistory.map(renderMessage).join("") + waiting + '</div>';
@@ -260,7 +266,7 @@ async function ask(e) {
     chatHistory.push({
       role:"assistant", subset, unit, answer:r.answer, policy:r.policy || {},
       usage:r.usage || {}, requiresApproval:Boolean(r.requires_approval),
-      fallbackReason:r.fallback_reason || null
+      fallbackReason:r.fallback_reason || null, engine:r.engine || null
     });
     renderChat(false);
   } catch (err) {

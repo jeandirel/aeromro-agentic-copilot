@@ -56,3 +56,7 @@ Visual sources are illustrative only; they are not the NASA C-MAPSS predictive d
 All photographs have graceful backgrounds if external loading fails. No image is presented as evidence for maintenance or as a prediction.
 
 The Copilot offers contextual starter questions and per-session chat history. Every assistant answer is returned by the existing AWS `POST /ask` endpoint; policy decisions, human-review requirements, model and fallback are shown explicitly. There are no local/generated answers. Keyboard shortcut: Ctrl/Cmd + Enter. Review and smoke-test the policy before launch. Unit smoke tests guard the API proxy’s allowlist and request handling; production browser verification is performed separately.
+
+## Verified facts in AI conversations
+
+The first section of each Copilot reply displays the structured `engine` object returned by the trusted FastAPI `/ask` response, separately from the language model's free-form text. Explicitly distinguish `engine.rul` (remaining cycles) from `engine.cycles_flown` (already flown cycles). A warning reminds users that the generated interpretation can still be wrong, particularly near status thresholds. Model name, latency and an actual fallback reason (if any) appear before the explanation; a generic banner is not proof of a fallback. An `allow` policy decision permits producing the **recommendation**, not operating the aircraft.
