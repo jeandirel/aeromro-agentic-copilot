@@ -22,8 +22,10 @@ if (question) {
   });
 }
 document.querySelectorAll(".hero-engine-image,.showcase-item img,.engine-cover img,.copilot-photo img").forEach((img) => {
-  img.addEventListener("error", () => {
+  const unavailable = () => {
     img.hidden = true;
     img.parentElement?.classList.add("image-unavailable");
-  });
+  };
+  img.addEventListener("error", unavailable);
+  if (img.complete && img.naturalWidth === 0) unavailable();
 });
