@@ -142,10 +142,8 @@ function totals() {
 function metrics() {
   const t = totals();
   const cards = [
-    { label: "Moteurs analysés", value: state.fleets.length ? num(t.engines) : "—", note: "Ensemble des flottes disponibles", icon: "↗", kind: "" },
-    { label: "Inspections prioritaires", value: state.fleets.length ? num(t.critical) : "—", note: "Selon le seuil d’inspection de l’API", icon: "!", kind: "danger" },
-    { label: "Inspections à planifier", value: state.fleets.length ? num(t.planned) : "—", note: "Selon les seuils de l’API", icon: "◷", kind: "caution" },
-    { label: "Flottes disponibles", value: state.fleets.length ? num(state.fleets.length) : "—", note: "Moteurs simulés C-MAPSS", icon: "▦", kind: "safe" },
+    { label: "Moteurs analysés", value: state.fleets.length ? num(t.engines) : "—", note: "Évaluations simulées disponibles", icon: "↗", kind: "" },
+    { label: "Flottes disponibles", value: state.fleets.length ? num(state.fleets.length) : "—", note: "NASA C-MAPSS · FD001–FD004", icon: "▦", kind: "safe" },
   ];
   $("metrics").innerHTML = cards.map((c) => '<article class="metric ' + c.kind + '"><div class="metric-top"><span>' + c.label + '</span><i>' + c.icon + '</i></div><strong>' + c.value + '</strong><small>' + c.note + "</small></article>").join("");
 }
