@@ -43,3 +43,16 @@ GET  /fleets/{FD001..FD004}/engines/{unit}?history=60
 GET  /audit?limit=50
 POST /ask
 ```
+
+## Premium imagery and assistant UX (October 2026)
+
+Visual sources are illustrative only; they are not the NASA C-MAPSS predictive data or pictures of the four FD00X test fleets.
+
+- Unsplash free photograph of a jet engine by [Joao](https://unsplash.com/photos/dqrwTvNAAH0), served from Unsplash's image CDN; used in the hero and Copilot header. Licensed under the Unsplash License; image loads from the provider rather than a local copy.
+- [NASA research aircraft in maintenance hangar](https://svs.gsfc.nasa.gov/12179), photographed for NASA (illustrative editorial card).
+- [U.S. Air Force turbine fan photo](https://www.tinker.af.mil/News/Article-Display/Article/846288/usaf-engines-tired-iron-and-cost-effective-readiness/), used in diagnostics and illustration cards.
+- [NASA ground crew technicians](https://images.nasa.gov/) (image AFRC2026-0012-076), used in the Copilot safety card.
+
+All photographs have graceful backgrounds if external loading fails. No image is presented as evidence for maintenance or as a prediction.
+
+The Copilot offers contextual starter questions and per-session chat history. Every assistant answer is returned by the existing AWS `POST /ask` endpoint; policy decisions, human-review requirements, model and fallback are shown explicitly. There are no local/generated answers. Keyboard shortcut: Ctrl/Cmd + Enter. Review and smoke-test the policy before launch. Unit smoke tests guard the API proxy’s allowlist and request handling; production browser verification is performed separately.
