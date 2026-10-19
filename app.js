@@ -4,7 +4,7 @@
 const API = "/api/proxy";
 const state = {
   fleets: [], health: null, enginesByFleet: {}, fleet: null, unit: null,
-  detail: null, view: "overview", loading: false, loadedAt: null, audit: [], thresholdsByFleet: {},
+  detail: null, view: "overview", loading: false, loadedAt: null, audit: [], thresholdsByFleet: {}, failedFleets: [],
 };
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -55,6 +55,10 @@ async function init(refresh = false) {
     if (!Array.isArray(fleets)) throw new Error("Structure des flottes inattendue.");
     state.fleets = fleets;
     state.health = health;
+    // Never retain data from a previous successful refresh if this refresh is partial.
+    state.enginesByFleet = {};
+    state.thresholdsByFleet = {};
+    state.failedFleets = [];
     connection(true);
     const wanted = refresh && state.fleet ? state.fleet : fleets[0]?.subset;
     if (!wanted) {
@@ -65,12 +69,14 @@ async function init(refresh = false) {
       // Load all available fleets for genuinely fleet-wide inspection priorities.
       // A failed secondary fleet never replaces its data with invented values.
       const otherFleets = fleets.map((f) => f.subset).filter((id) => id !== wanted && /^FD00[1-4]$/.test(id));
-      await Promise.allSettled(otherFleets.map(async (id) => {
+      const outcomes = await Promise.allSettled(otherFleets.map(async (id) => {
         const payload = await api("/fleets/" + id + "/engines");
         if (!Array.isArray(payload?.engines)) throw new Error("Invalid engine list for " + id);
         state.enginesByFleet[id] = payload.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul)));
         state.thresholdsByFleet[id] = payload.thresholds || {};
       }));
+      state.failedFleets = otherFleets.filter((id,index)=>outcomes[index].status==="rejected");
+      if (state.failedFleets.length) error("Couverture incomplète : " + state.failedFleets.join(", ") + " non chargée(s). Les priorités affichées ne concernent que les flottes récupérées.");
     }
     state.loadedAt = new Date();
     $("lastUpdated").textContent = "Mis à jour à " + state.loadedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
@@ -92,7 +98,9 @@ async function loadFleet(subset, opts = {}) {
     state.thresholdsByFleet[subset] = response.thresholds || {};
   }
   const engines = activeEngines();
-  const chosen = opts.keepUnit && engines.some((e) => e.unit === previousUnit) ? previousUnit : engines[0]?.unit ?? null;
+  const order={inspect_now:0,plan_inspection:1,healthy:2};
+  const firstRisk=[...engines].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || Number(a.rul)-Number(b.rul))[0];
+  const chosen = opts.keepUnit && engines.some((e) => Number(e.unit) === Number(previousUnit)) ? previousUnit : firstRisk?.unit ?? null;
   if (chosen == null) { state.unit = null; state.detail = null; }
   else await loadEngine(chosen, { quiet: true });
   if (!opts.quiet) render();
@@ -152,19 +160,19 @@ function priorities() {
     .filter((e)=>e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul)))
     .sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || Number(a.rul)-Number(b.rul))
     .slice(0,8);
-  $("priorityRows").innerHTML=engines.length?engines.map((e)=>
+  $("priorityRows").innerHTML=(state.failedFleets.length ? '<p class="coverage-alert" role="status">Couverture partielle : '+esc(state.failedFleets.join(", "))+'. Priorités limitées aux données reçues.</p>' : "")+(engines.length?engines.map((e)=>
     '<button class="priority-row queue-entry '+esc(e.status)+'" data-priority-fleet="'+esc(e.subset)+'" data-unit="'+e.unit+'" data-jump="fleet" aria-label="Examiner '+esc(e.subset)+' moteur '+e.unit+'">'
     +'<span class="queue-identity"><span class="queue-state" aria-hidden="true"></span><span><strong>'+esc(e.subset)+' / ENG–'+esc(e.unit)+'</strong><small>'+esc(statusText[e.status]||e.status)+' · '+num(e.cycles_flown)+' cycles parcourus</small></span></span>'
     +'<span class="queue-range">'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'<small>cycles · intervalle 80 %</small></span>'
     +'<span class="queue-remaining"><strong>'+num(e.rul,1)+'</strong><small>cycles ↗</small></span></button>').join("")
-    :'<p class="empty">Les listes moteurs sont indisponibles. Aucune valeur n’est simulée côté interface.</p>';
+    :'<p class="empty">Les listes moteurs sont indisponibles. Aucune valeur n’est simulée côté interface.</p>');
 }
 function controlRoom() {
   const t=totals();
   $("ribbonCritical").textContent=num(t.critical);
   $("ribbonPlan").textContent=num(t.planned);
   $("ribbonActive").textContent=state.unit!=null ? (state.fleet+" / ENG–"+state.unit) : "Aucun moteur";
-  $("ribbonSync").textContent=state.loadedAt ? state.loadedAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "En attente API";
+  $("ribbonSync").textContent=state.loadedAt ? state.loadedAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+" · "+Object.keys(state.enginesByFleet).length+"/"+state.fleets.length+" flottes" : "En attente API";
   const e=selectedAssessment();
   if (!e) {
     $("commandFocus").innerHTML='<p class="empty">Aucune évaluation moteur disponible. Connectez l’API ou sélectionnez une flotte.</p>';
