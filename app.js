@@ -261,8 +261,13 @@ async function switchFleet(subset) {
   clearError();
   try { await loadFleet(subset, { fresh:false }); } catch(e) { error("Chargement flotte "+subset+" : "+e.message); }
 }
-function showView(view) {
+function showView(view, options = {}) {
   if (!["overview","fleet","assistant","audit","industry"].includes(view)) return;
+  // Native browser history, deep links and Back/Forward are part of real navigation.
+  if (options.updateHistory !== false && window.history?.pushState && window.location) {
+    const target="#view="+encodeURIComponent(view);
+    if (window.location.hash !== target) window.history.pushState({view},"",target);
+  }
   state.view=view;
   document.querySelectorAll(".view").forEach((el)=>{el.hidden=el.dataset.section!==view;});
   document.querySelectorAll(".nav-link").forEach((button)=>{const active=button.dataset.view===view;button.classList.toggle("active",active);if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");});
@@ -398,5 +403,16 @@ $("fleetExportButton").addEventListener("click",downloadCSV);
 $("menuButton").addEventListener("click",()=>{$("sidebar").classList.add("open");$("backdrop").hidden=false;});
 $("backdrop").addEventListener("click",()=>{$("sidebar").classList.remove("open");$("backdrop").hidden=true;});
 document.addEventListener("keydown",(e)=>{if(e.key==="Escape"){$("sidebar").classList.remove("open");$("backdrop").hidden=true;}});
+function viewFromLocation() {
+  if (!window.location?.hash) return "overview";
+  const id=new URLSearchParams(window.location.hash.replace(/^#/,"")).get("view");
+  return ["overview","fleet","assistant","audit","industry"].includes(id) ? id : "overview";
+}
+if (window.addEventListener) {
+  window.addEventListener("popstate",()=>showView(viewFromLocation(),{updateHistory:false}));
+  window.addEventListener("hashchange",()=>showView(viewFromLocation(),{updateHistory:false}));
+}
 init();
+const initialView=viewFromLocation();
+if(initialView!=="overview")showView(initialView,{updateHistory:false});
 setInterval(()=>{if(!document.hidden && !state.loading)init(true);},90000);
