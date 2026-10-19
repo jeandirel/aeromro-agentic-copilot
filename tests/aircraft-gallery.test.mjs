@@ -48,8 +48,10 @@ test("Photo gallery is a real isolated native browser component",()=>{
 });
 
 test("Each aircraft family has a distinct validated-source photograph",()=>{
-  const all=code.match(/Special:FilePath\//g)||[];
+  const all=code.match(/https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\//g)||[];
   assert.equal(all.length,8,"each of four aircraft needs thumbnail and modal image");
+  assert.ok(!code.includes("Special:FilePath/"),"redirecting Special:FilePath was unreliable on preview");
+  assert.match(code,/class="photo-credit"/);
   const names=["Airbus_A320","Airbus_A350","Boeing_787","Boeing_777"];
   for(const name of names)assert.ok(code.includes(name),name);
   assert.ok(code.includes("commons.wikimedia.org/wiki/File:"));
