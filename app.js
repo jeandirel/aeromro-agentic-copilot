@@ -68,7 +68,7 @@ async function init(refresh = false) {
       await Promise.allSettled(otherFleets.map(async (id) => {
         const payload = await api("/fleets/" + id + "/engines");
         if (!Array.isArray(payload?.engines)) throw new Error("Invalid engine list for " + id);
-        state.enginesByFleet[id] = payload.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && Number.isFinite(Number(e.rul)));
+        state.enginesByFleet[id] = payload.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul)));
         state.thresholdsByFleet[id] = payload.thresholds || {};
       }));
     }
@@ -88,7 +88,7 @@ async function loadFleet(subset, opts = {}) {
   if (!state.enginesByFleet[subset] || opts.fresh) {
     const response = await api("/fleets/" + subset + "/engines");
     if (!Array.isArray(response?.engines)) throw new Error("Liste des moteurs invalide.");
-    state.enginesByFleet[subset] = response.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && Number.isFinite(Number(e.rul)));
+    state.enginesByFleet[subset] = response.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul)));
     state.thresholdsByFleet[subset] = response.thresholds || {};
   }
   const engines = activeEngines();
@@ -147,7 +147,7 @@ function fleetDistribution() {
   $("overviewFleets").innerHTML = html + '<div class="distribution-legend"><span><i class="segment-critical"></i> Inspection prioritaire</span><span><i class="segment-plan"></i> À planifier</span><span><i class="segment-good"></i> Normal</span></div>';
 }
 function priorities() {
-  const engines = Object.values(state.enginesByFleet).flat().filter((e) => Number.isFinite(Number(e.rul))).sort((a,b) => Number(a.rul) - Number(b.rul)).slice(0,5);
+  const engines = Object.values(state.enginesByFleet).flat().filter((e) => e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul))).sort((a,b) => Number(a.rul) - Number(b.rul)).slice(0,5);
   $("priorityRows").innerHTML = engines.length ? engines.map((e) => '<button class="priority-row" data-priority-fleet="' + esc(e.subset) + '" data-unit="' + e.unit + '" data-jump="fleet"><span class="engine-mini-icon">✈</span><span class="priority-info"><strong>Moteur ' + esc(e.unit) + ' · ' + esc(e.subset) + '</strong><small>' + esc(statusText[e.status] || e.status) + '</small></span><span class="priority-value"><strong>' + num(e.rul,1) + '</strong><small>cycles restants</small></span></button>').join("") : '<p class="empty">Aucun moteur disponible pour cette flotte.</p>';
 }
 function chart(history, key, label) {
