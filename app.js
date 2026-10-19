@@ -262,11 +262,11 @@ async function switchFleet(subset) {
   try { await loadFleet(subset, { fresh:false }); } catch(e) { error("Chargement flotte "+subset+" : "+e.message); }
 }
 function showView(view) {
-  if (!["overview","fleet","assistant","audit"].includes(view)) return;
+  if (!["overview","fleet","assistant","audit","industry"].includes(view)) return;
   state.view=view;
   document.querySelectorAll(".view").forEach((el)=>{el.hidden=el.dataset.section!==view;});
   document.querySelectorAll(".nav-link").forEach((button)=>{const active=button.dataset.view===view;button.classList.toggle("active",active);if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");});
-  const names={overview:"Centre de contrôle",fleet:"Diagnostic flotte",assistant:"Copilote d’analyse",audit:"Traçabilité"};
+  const names={overview:"Centre de contrôle",fleet:"Diagnostic flotte",assistant:"Copilote d’analyse",audit:"Traçabilité",industry:"Écosystème aviation"};
   $("breadcrumbCurrent").textContent=names[view];
   $("sidebar").classList.remove("open");$("backdrop").hidden=true;
   window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
