@@ -64,3 +64,56 @@ test("The /ask route forwards only valid engine questions; invalid bodies are bl
     }
   } finally {globalThis.fetch=prev;}
 });
+
+test("Gateway denies cross-site POST, oversized payloads and malformed upstream query values", async () => {
+  const oldFetch = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = async () => { requests++; return {status:200,text:async()=>JSON.stringify([])}; };
+  try {
+    const badPaths = [
+      "/audit?limit=0", "/audit?limit=201", "/audit?limit=10&limit=15",
+      "/fleets/FD001/engines/2?history=401",
+      "/fleets/FD001/engines?status=not_a_status",
+      "/health?limit=1", "/ask?unexpected=1",
+      "/health#unexpected"
+    ];
+    for (const path of badPaths) {
+      const res = mockResponse();
+      await handler(mockRequest("GET",path),res);
+      assert.ok(res.code === 400 || res.code === 403, JSON.stringify({path,status:res.code}));
+    }
+    const crossSite = {...mockRequest("POST","/ask",{subset:"FD001",unit:1,question:"Explain RUL"}),headers:{"host":"aeromro.example","origin":"https://evil.example"}};
+    let res = mockResponse();
+    await handler(crossSite,res);
+    assert.equal(res.code,403);
+    res = mockResponse();
+    await handler({...mockRequest("GET","/health"),headers:{"sec-fetch-site":"cross-site"}},res);
+    assert.equal(res.code,403);
+    res = mockResponse();
+    await handler({...mockRequest("POST","/ask",{subset:"FD001",unit:1,question:"Explain RUL"}),headers:{"content-length":"3000"}},res);
+    assert.equal(res.code,413);
+    assert.equal(requests,0);
+  } finally { globalThis.fetch = oldFetch; }
+});
+test("Gateway preserves supported filter and history query parameters", async () => {
+  const oldFetch = globalThis.fetch;
+  let captured = [];
+  globalThis.fetch = async (url) => {
+    captured.push(String(url));
+    return {status:200,headers:{get:()=>null},text:async()=>JSON.stringify({engines:[]})};
+  };
+  try {
+    for(const path of [
+      "/fleets/FD001/engines?status=healthy",
+      "/fleets/FD002/engines/1?history=100",
+      "/audit?limit=50"
+    ]){
+      const res=mockResponse();
+      await handler(mockRequest("GET",path),res);
+      assert.equal(res.code,200);
+    }
+    assert.ok(captured[0].endsWith("/fleets/FD001/engines?status=healthy"));
+    assert.ok(captured[1].endsWith("/fleets/FD002/engines/1?history=100"));
+    assert.ok(captured[2].endsWith("/audit?limit=50"));
+  } finally { globalThis.fetch=oldFetch; }
+});
