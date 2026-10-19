@@ -42,3 +42,18 @@ test("The gateway maintains a fixed upstream and no browser-supplied origin",() 
   assert.match(gateway,/sec-fetch-site/);
   assert.match(gateway,/permitted\(upstream\.pathname, req\.method\)/);
 });
+
+test("Mission Control exposes risk triage and in-context Bedrock tools", () => {
+  for(const id of ["commandDeck","priorityRows","commandFocus","ribbonCritical","ribbonPlan","ribbonActive","ribbonSync"]) {
+    assert.ok(html.includes('id="' + id + '"'),id);
+  }
+  assert.match(html,/control-room\.css/);
+  assert.ok(!html.includes('class="hero"'),"Marketing hero must not displace risk triage");
+  assert.ok(!html.includes('class="aero-showcase"'),"Marketing image showcase removed");
+  assert.ok(!html.includes('class="engine-cover"'),"Diagnostic image replaced with actual telemetry");
+  assert.match(script,/function controlRoom\(\)/);
+  assert.match(script,/data-copilot-intent/);
+  assert.match(script,/requestSubmit\(\)/);
+  assert.match(script,/commandFocus/);
+  assert.match(script,/api\("\/ask",\s*\{\s*method:"POST"/);
+});
