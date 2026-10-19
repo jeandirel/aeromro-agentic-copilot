@@ -4,7 +4,7 @@
 const API = "/api/proxy";
 const state = {
   fleets: [], health: null, enginesByFleet: {}, fleet: null, unit: null,
-  detail: null, view: "overview", loading: false, loadedAt: null, audit: [],
+  detail: null, view: "overview", loading: false, loadedAt: null, audit: [], thresholdsByFleet: {},
 };
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -15,12 +15,19 @@ const activeFleet = () => state.fleets.find((f) => f.subset === state.fleet);
 const activeEngines = () => state.enginesByFleet[state.fleet] || [];
 
 async function api(path, options = {}) {
-  const response = await fetch(API + "?path=" + encodeURIComponent(path), {
-    method: options.method || "GET",
-    headers: options.body ? { "Content-Type": "application/json" } : {},
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    cache: "no-store",
-  });
+  let response;
+  try {
+    response = await fetch(API + "?path=" + encodeURIComponent(path), {
+      method: options.method || "GET",
+      headers: options.body ? { "Content-Type": "application/json" } : {},
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      cache: "no-store",
+      signal: AbortSignal.timeout(28000),
+    });
+  } catch (cause) {
+    if (cause?.name === "TimeoutError" || cause?.name === "AbortError") throw new Error("Le service a dépassé le délai de 28 secondes.");
+    throw new Error("Connexion API interrompue. Réessayez après vérification du réseau.");
+  }
   let data;
   try { data = await response.json(); } catch { throw new Error("Réponse invalide du serveur (" + response.status + ")"); }
   if (!response.ok) {
@@ -55,6 +62,15 @@ async function init(refresh = false) {
       state.enginesByFleet = {};
     } else {
       await loadFleet(wanted, { fresh: true, keepUnit: refresh, quiet: true });
+      // Load all available fleets for genuinely fleet-wide inspection priorities.
+      // A failed secondary fleet never replaces its data with invented values.
+      const otherFleets = fleets.map((f) => f.subset).filter((id) => id !== wanted && /^FD00[1-4]$/.test(id));
+      await Promise.allSettled(otherFleets.map(async (id) => {
+        const payload = await api("/fleets/" + id + "/engines");
+        if (!Array.isArray(payload?.engines)) throw new Error("Invalid engine list for " + id);
+        state.enginesByFleet[id] = payload.engines;
+        state.thresholdsByFleet[id] = payload.thresholds || {};
+      }));
     }
     state.loadedAt = new Date();
     $("lastUpdated").textContent = "Mis à jour à " + state.loadedAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
@@ -73,6 +89,7 @@ async function loadFleet(subset, opts = {}) {
     const response = await api("/fleets/" + subset + "/engines");
     if (!Array.isArray(response?.engines)) throw new Error("Liste des moteurs invalide.");
     state.enginesByFleet[subset] = response.engines;
+    state.thresholdsByFleet[subset] = response.thresholds || {};
   }
   const engines = activeEngines();
   const chosen = opts.keepUnit && engines.some((e) => e.unit === previousUnit) ? previousUnit : engines[0]?.unit ?? null;
@@ -86,9 +103,10 @@ async function loadEngine(unit, opts = {}) {
   state.unit = id;
   state.detail = null;
   if (!opts.quiet) render();
+  const requestedFleet = state.fleet;
   try {
-    const result = await api("/fleets/" + state.fleet + "/engines/" + id + "?history=60");
-    if (state.unit === id) state.detail = result;
+    const result = await api("/fleets/" + requestedFleet + "/engines/" + id + "?history=60");
+    if (state.unit === id && state.fleet === requestedFleet) state.detail = result;
     clearError();
   } catch (e) {
     error("Impossible de lire l’historique du moteur " + id + " : " + e.message);
@@ -111,8 +129,8 @@ function metrics() {
   const t = totals();
   const cards = [
     { label: "Moteurs analysés", value: num(t.engines), note: "Ensemble des flottes disponibles", icon: "↗", kind: "" },
-    { label: "Inspections prioritaires", value: num(t.critical), note: "RUL estimé ≤ 15 cycles", icon: "!", kind: "danger" },
-    { label: "Inspections à planifier", value: num(t.planned), note: "RUL de 15 à 50 cycles", icon: "◷", kind: "caution" },
+    { label: "Inspections prioritaires", value: num(t.critical), note: "Selon le seuil d’inspection de l’API", icon: "!", kind: "danger" },
+    { label: "Inspections à planifier", value: num(t.planned), note: "Selon les seuils de l’API", icon: "◷", kind: "caution" },
     { label: "Flottes disponibles", value: num(state.fleets.length), note: "Moteurs simulés C-MAPSS", icon: "▦", kind: "safe" },
   ];
   $("metrics").innerHTML = cards.map((c) => '<article class="metric ' + c.kind + '"><div class="metric-top"><span>' + c.label + '</span><i>' + c.icon + '</i></div><strong>' + c.value + '</strong><small>' + c.note + "</small></article>").join("");
@@ -129,10 +147,11 @@ function fleetDistribution() {
   $("overviewFleets").innerHTML = html + '<div class="distribution-legend"><span><i class="segment-critical"></i> Inspection prioritaire</span><span><i class="segment-plan"></i> À planifier</span><span><i class="segment-good"></i> Normal</span></div>';
 }
 function priorities() {
-  const engines = activeEngines().slice().sort((a,b) => Number(a.rul) - Number(b.rul)).slice(0,5);
-  $("priorityRows").innerHTML = engines.length ? engines.map((e) => '<button class="priority-row" data-unit="' + e.unit + '" data-jump="fleet"><span class="engine-mini-icon">✈</span><span class="priority-info"><strong>Moteur ' + esc(e.unit) + ' · ' + esc(e.subset) + '</strong><small>' + esc(statusText[e.status] || e.status) + '</small></span><span class="priority-value"><strong>' + num(e.rul,1) + '</strong><small>cycles restants</small></span></button>').join("") : '<p class="empty">Aucun moteur disponible pour cette flotte.</p>';
+  const engines = Object.values(state.enginesByFleet).flat().filter((e) => Number.isFinite(Number(e.rul))).sort((a,b) => Number(a.rul) - Number(b.rul)).slice(0,5);
+  $("priorityRows").innerHTML = engines.length ? engines.map((e) => '<button class="priority-row" data-priority-fleet="' + esc(e.subset) + '" data-unit="' + e.unit + '" data-jump="fleet"><span class="engine-mini-icon">✈</span><span class="priority-info"><strong>Moteur ' + esc(e.unit) + ' · ' + esc(e.subset) + '</strong><small>' + esc(statusText[e.status] || e.status) + '</small></span><span class="priority-value"><strong>' + num(e.rul,1) + '</strong><small>cycles restants</small></span></button>').join("") : '<p class="empty">Aucun moteur disponible pour cette flotte.</p>';
 }
 function chart(history, key, label) {
+  if (!/^[a-z][a-z0-9_]*$/i.test(key)) return '<p class="empty">Courbe indisponible.</p>';
   const data = (history || []).filter((h) => Number.isFinite(Number(h[key])));
   if (data.length < 2) return '<p class="empty">Historique insuffisant pour dessiner une courbe.</p>';
   const W=720,H=230,left=48,right=15,top=15,bottom=33, w=W-left-right,h=H-top-bottom;
@@ -160,9 +179,18 @@ function engineTable() {
   const search=$("searchInput").value.trim().toLowerCase();
   const filter=$("statusFilter").value;
   const engines=activeEngines().filter((e)=>(filter==="all" || e.status===filter) && (String(e.unit).includes(search) || String(e.subset).toLowerCase().includes(search)));
+  const sorting=$("sortSelect")?.value || "rul_asc";
+  const sortable = {
+    rul_asc:(a,b)=>Number(a.rul)-Number(b.rul),
+    rul_desc:(a,b)=>Number(b.rul)-Number(a.rul),
+    cycles_desc:(a,b)=>Number(b.cycles_flown)-Number(a.cycles_flown),
+    confidence_asc:(a,b)=>Number(a.confidence)-Number(b.confidence),
+    unit_asc:(a,b)=>Number(a.unit)-Number(b.unit)
+  };
+  engines.sort(sortable[sorting] || sortable.rul_asc);
   $("fleetTableTitle").textContent="Inventaire moteurs · "+(state.fleet || "—");
   $("engineCountLabel").textContent=num(engines.length)+" moteurs";
-  $("engineRows").innerHTML=engines.length?engines.map((e)=>'<tr class="'+(Number(e.unit)===state.unit?"selected":"")+'"><td class="engine-id">ENG–'+esc(e.unit)+'</td><td>'+tag(e.status)+'</td><td><strong>'+num(e.rul,1)+' cycles</strong></td><td>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</td><td>'+num(Number(e.confidence)*100,1)+' %</td><td><button class="table-select" data-unit="'+e.unit+'" aria-label="Afficher moteur '+e.unit+'">Détails ↗</button></td></tr>').join(""):'<tr><td colspan="6" class="empty">Aucun moteur ne correspond aux filtres.</td></tr>';
+  $("engineRows").innerHTML=engines.length?engines.map((e)=>'<tr class="'+(Number(e.unit)===state.unit?"selected":"")+'"><td class="engine-id">ENG–'+esc(e.unit)+'</td><td>'+tag(e.status)+'</td><td><strong>'+num(e.rul,1)+' cycles</strong></td><td>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</td><td>'+num(e.cycles_flown)+'</td><td>'+num(Number(e.confidence)*100,1)+' %</td><td><button class="table-select" data-unit="'+e.unit+'" aria-label="Afficher moteur '+e.unit+'">Détails ↗</button></td></tr>').join(""):'<tr><td colspan="7" class="empty">Aucun moteur ne correspond aux filtres.</td></tr>';
 }
 function engineDetails() {
   const e=selectedAssessment();
@@ -170,7 +198,12 @@ function engineDetails() {
   const sensors=state.detail?.sensors || {};
   const hist=state.detail?.history || [];
   const last=hist[hist.length-1] || {};
-  $("engineDetails").innerHTML='<div class="engine-id-head"><span class="engine-mini-icon">✈</span><div><h2>ENG–'+esc(e.unit)+'</h2><p>'+esc(e.subset)+' · '+num(e.cycles_flown)+' cycles parcourus</p></div></div><div class="engine-rul"><div><span>DURÉE DE VIE RÉSIDUELLE</span><strong>'+num(e.rul,1)+' <small>cycles</small></strong></div><span class="rul-icon">⌁</span></div><div class="detail-split"><div class="detail-info"><span>Statut</span>'+tag(e.status)+'</div><div class="detail-info"><span>Confiance statut</span><strong>'+num(Number(e.confidence)*100,1)+' %</strong></div><div class="detail-info"><span>Intervalle 80 %</span><strong>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</strong></div><div class="detail-info"><span>Cycles parcourus</span><strong>'+num(e.cycles_flown)+'</strong></div></div><h4 class="engine-section-title">Tendance RUL</h4><div class="detail-chart">'+chart(hist,"rul","RUL du moteur "+e.unit)+'</div><h4 class="engine-section-title">Dernières mesures normalisées</h4>'+Object.entries(sensors).map(([k,description])=>'<div class="sensor-row"><span title="'+esc(description)+'">'+esc(description)+'</span><strong>'+num(last[k],3)+'</strong></div>').join("")+'<p class="small-note">Capteurs normalisés pour le modèle, sans unités physiques. Analyse d’aide à la décision uniquement.</p><button class="btn btn-primary" data-jump="assistant" style="width:100%;margin-top:14px">✧ Interroger le copilote ↗</button>';
+  const sensorOptions = Object.entries(sensors).filter(([k]) => /^[a-z][a-z0-9_]*$/i.test(k));
+  const firstSensor = sensorOptions[0]?.[0];
+  const sensorSelector = firstSensor
+    ? '<div class="sensor-control"><label for="sensorMetric">Évolution du capteur observé</label><select id="sensorMetric" aria-label="Choisir le capteur observé">' + sensorOptions.map(([k,description]) => '<option value="' + esc(k) + '">' + esc(description) + '</option>').join("") + '</select></div><div id="sensorTrend" class="detail-chart">' + chart(hist, firstSensor, sensors[firstSensor]) + '</div>'
+    : '<p class="small-note">Aucun historique de capteur fourni.</p>';
+  $("engineDetails").innerHTML='<div class="engine-id-head"><span class="engine-mini-icon">✈</span><div><h2>ENG–'+esc(e.unit)+'</h2><p>'+esc(e.subset)+' · '+num(e.cycles_flown)+' cycles parcourus</p></div></div><div class="engine-rul"><div><span>DURÉE DE VIE RÉSIDUELLE</span><strong>'+num(e.rul,1)+' <small>cycles</small></strong></div><span class="rul-icon">⌁</span></div><div class="detail-split"><div class="detail-info"><span>Statut</span>'+tag(e.status)+'</div><div class="detail-info"><span>Confiance statut</span><strong>'+num(Number(e.confidence)*100,1)+' %</strong></div><div class="detail-info"><span>Intervalle 80 %</span><strong>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</strong></div><div class="detail-info"><span>Cycles parcourus</span><strong>'+num(e.cycles_flown)+'</strong></div></div><h4 class="engine-section-title">Tendance RUL</h4><div class="detail-chart">'+chart(hist,"rul","RUL du moteur "+e.unit)+'</div>'+sensorSelector+'<h4 class="engine-section-title">Dernières mesures normalisées</h4>'+Object.entries(sensors).map(([k,description])=>'<div class="sensor-row"><span title="'+esc(description)+'">'+esc(description)+'</span><strong>'+num(last[k],3)+'</strong></div>').join("")+'<p class="small-note">Capteurs normalisés pour le modèle, sans unités physiques. Analyse d’aide à la décision uniquement.</p><button class="btn btn-primary" data-jump="assistant" style="width:100%;margin-top:14px">✧ Interroger le copilote ↗</button>';
 }
 function selectors() {
   const fleetSel=$("assistantFleet"),engineSel=$("assistantEngine");
@@ -193,7 +226,7 @@ function showView(view) {
   const names={overview:"Vue d’ensemble",fleet:"Parc moteurs",assistant:"Copilote IA",audit:"Journal d’audit"};
   $("breadcrumbCurrent").textContent=names[view];
   $("sidebar").classList.remove("open");$("backdrop").hidden=true;
-  window.scrollTo({top:0,behavior:"smooth"});
+  window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
   if(view==="audit")loadAudit();
 }
 async function loadAudit() {
@@ -247,6 +280,8 @@ function renderChat(pending = false) {
   const waiting = pending ? '<article class="chat-message pending"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>Analyse en cours</span></div><div>Interrogation du service IA AWS… <span aria-label="Patientez">◌</span></div></div></article>' : "";
   target.innerHTML = '<div class="ai-thread">' + chatHistory.map(renderMessage).join("") + waiting + '</div>';
   target.scrollTop = target.scrollHeight;
+  if ($("chatHistoryCount")) $("chatHistoryCount").textContent = chatHistory.length ? Math.ceil(chatHistory.length / 2) + " échanges dans cet onglet" : "Aucun échange";
+  if ($("chatClearButton")) $("chatClearButton").disabled = !chatHistory.length || pending;
 }
 async function ask(e) {
   e.preventDefault();
@@ -280,12 +315,22 @@ async function ask(e) {
 document.addEventListener("click",async(e)=>{
   const button=e.target.closest("button");if(!button)return;
   if(button.dataset.view)showView(button.dataset.view);
+  if(button.dataset.priorityFleet && button.dataset.priorityFleet !== state.fleet) await switchFleet(button.dataset.priorityFleet);
   if(button.dataset.unit){await loadEngine(button.dataset.unit);if(button.dataset.jump)showView(button.dataset.jump);}
   else if(button.dataset.jump)showView(button.dataset.jump);
   if(button.dataset.fleet)await switchFleet(button.dataset.fleet);
 });
 $("searchInput").addEventListener("input",engineTable);
 $("statusFilter").addEventListener("change",engineTable);
+$("sortSelect").addEventListener("change",engineTable);
+$("resetFilters").addEventListener("click", () => { $("searchInput").value = ""; $("statusFilter").value = "all"; $("sortSelect").value = "rul_asc"; engineTable(); });
+document.addEventListener("change", (event) => {
+  if (event.target?.id !== "sensorMetric" || !state.detail) return;
+  const key = event.target.value;
+  if (!Object.prototype.hasOwnProperty.call(state.detail.sensors || {},key)) return;
+  $("sensorTrend").innerHTML = chart(state.detail.history,key,state.detail.sensors[key]);
+});
+$("chatClearButton").addEventListener("click", () => { chatHistory.length = 0; renderChat(); });
 $("assistantFleet").addEventListener("change",async(e)=>{await switchFleet(e.target.value);});
 $("assistantEngine").addEventListener("change",async(e)=>{await loadEngine(e.target.value);});
 $("askForm").addEventListener("submit",ask);
