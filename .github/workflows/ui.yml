@@ -4,7 +4,12 @@ on:
     paths:
       - index.html
       - styles.css
+      - premium.css
+      - mission.css
       - app.js
+      - premium.js
+      - tests/frontend-contract.test.mjs
+      - tests/ui-smoke.test.mjs
       - api/**
       - vercel.json
       - package.json
@@ -14,7 +19,12 @@ on:
     paths:
       - index.html
       - styles.css
+      - premium.css
+      - mission.css
       - app.js
+      - premium.js
+      - tests/frontend-contract.test.mjs
+      - tests/ui-smoke.test.mjs
       - api/**
       - vercel.json
       - package.json
