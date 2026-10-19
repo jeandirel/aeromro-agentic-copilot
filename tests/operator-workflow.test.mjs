@@ -13,6 +13,7 @@ function harness() {
   const listeners=new Map();
   const inputs={statusFilter:"all",sortSelect:"rul_asc"};
   let failFD002=false;
+  let failHealth=false;
   const calls=[];
   const datasets={
     FD001:[engine("FD001",1,50,"healthy"),engine("FD001",2,3,"inspect_now")],
@@ -40,6 +41,7 @@ function harness() {
   async function fetch(url,options={}){
     const path=new URL(String(url),"https://local.example").searchParams.get("path");
     calls.push({path,method:options.method||"GET",body:options.body});
+    if(path==="/health" && failHealth)return {ok:false,status:503,json:async()=>({detail:"Service unavailable"})};
     if(path?.startsWith("/fleets/FD002") && failFD002)return {ok:false,status:503,json:async()=>({detail:"Fleet unavailable"})};
     let payload;
     if(path==="/health")payload={status:"ok",llm_provider:"bedrock"};
@@ -62,7 +64,7 @@ function harness() {
   const context=vm.createContext({document,window:{matchMedia:()=>({matches:true}),scrollTo(){}},fetch,
     AbortSignal,Number,Intl,URL,Blob,console,setInterval(){}});
   vm.runInContext(source,context,{filename:"app.js"});
-  return {context,elements,element,listeners,calls,failFD002:()=>{failFD002=true;}};
+  return {context,elements,element,listeners,calls,failFD002:()=>{failFD002=true;},failHealth:()=>{failHealth=true;}};
 }
 const tick=()=>new Promise(resolve=>setTimeout(resolve,15));
 
@@ -97,4 +99,15 @@ test("Engine analysis controls submit a contextual /ask request; they never fabr
   assert.equal(body.unit,2);
   assert.match(body.question,/RUL restant/);
   assert.ok(h.element("aiOutput").innerHTML.includes("Analyse fournie par le service distant"));
+});
+
+test("A lost AWS connection never masquerades as a zero-risk fleet",async()=>{
+  const h=harness();await tick();
+  h.failHealth();
+  await vm.runInContext("init(true)",h.context);
+  assert.equal(h.element("ribbonCritical").textContent,"—");
+  assert.equal(h.element("ribbonActive").textContent,"Aucun moteur");
+  assert.ok(!h.element("commandFocus").innerHTML.includes("RUL ESTIMÉ"));
+  assert.ok(!h.element("priorityRows").innerHTML.includes("FD002 / ENG–7"));
+  assert.ok(h.element("globalError").textContent.includes("Impossible de charger"));
 });
