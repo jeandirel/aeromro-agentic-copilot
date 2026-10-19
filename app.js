@@ -213,19 +213,63 @@ function downloadCSV() {
   const url=URL.createObjectURL(new Blob([body],{type:"text/csv;charset=utf-8;"}));
   const a=document.createElement("a");a.href=url;a.download="aeromro_"+state.fleet+"_moteurs.csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
+
+const chatHistory = [];
+function renderChat(pending = false) {
+  const target = $("aiOutput");
+  const renderMessage = (entry) => {
+    const isUser = entry.role === "user";
+    if (isUser) {
+      return '<article class="chat-message user"><div class="chat-avatar" aria-hidden="true">VO</div><div class="chat-body"><div class="chat-topline"><strong>Votre question</strong><span>' + esc(entry.subset) + ' / ENG–' + esc(entry.unit) + '</span></div><div class="chat-text">' + esc(entry.question) + '</div></div></article>';
+    }
+    if (entry.role === "error") {
+      return '<article class="chat-message failure"><div class="chat-avatar" aria-hidden="true">!</div><div class="chat-body"><div class="chat-topline"><strong>Réponse indisponible</strong></div><div class="chat-text">' + esc(entry.message) + '</div><div class="chat-source">Aucune réponse IA n’a été inventée.</div></div></article>';
+    }
+    const p = entry.policy || {}, u = entry.usage || {};
+    const decision = p.decision || "unknown";
+    const policyMessage = entry.requiresApproval
+      ? "Revue humaine requise avant toute action. " + (p.reason || "")
+      : "Décision de la politique : " + (statusText[decision] || decision) + ". Aucune autorisation de navigabilité n’est émise.";
+    const tags = [
+      "Modèle : " + (u.model || "non communiqué"),
+      "Latence : " + num(u.latency_ms, 1) + " ms",
+      "Jetons : " + num((u.input_tokens || 0) + (u.output_tokens || 0)),
+    ];
+    if (entry.fallbackReason) tags.push("Mode de repli actif : " + entry.fallbackReason);
+    return '<article class="chat-message assistant"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>' + esc(entry.subset) + ' · ENG–' + esc(entry.unit) + '</span>' + tag(decision) + '</div><div class="chat-text">' + esc(entry.answer) + '</div><div class="chat-policy ' + esc(decision) + '">' + esc(policyMessage) + '</div><div class="chat-source">Données d’évaluation NASA C-MAPSS · API /ask · informations simulées</div><div class="chat-meta">' + tags.map(t => '<span>' + esc(t) + '</span>').join("") + '</div></div></article>';
+  };
+  const waiting = pending ? '<article class="chat-message pending"><div class="chat-avatar" aria-hidden="true">✧</div><div class="chat-body"><div class="chat-topline"><strong>AeroMRO Copilot</strong><span>Analyse en cours</span></div><div>Interrogation du service IA AWS… <span aria-label="Patientez">◌</span></div></div></article>' : "";
+  target.innerHTML = '<div class="ai-thread">' + chatHistory.map(renderMessage).join("") + waiting + '</div>';
+  target.scrollTop = target.scrollHeight;
+}
 async function ask(e) {
   e.preventDefault();
-  const subset=$("assistantFleet").value,unit=Number($("assistantEngine").value),question=$("questionInput").value.trim();
-  if(!/^FD00[1-4]$/.test(subset)||!Number.isSafeInteger(unit)||unit<1||question.length<3||question.length>500)return;
-  const button=$("askButton");button.disabled=true;button.textContent="Analyse en cours…";
-  $("aiOutput").innerHTML='<div class="ai-placeholder"><span class="loading-spin">◌</span><strong>Interrogation de l’API AWS…</strong><p>La réponse sera affichée dès réception.</p></div>';
+  const subset = $("assistantFleet").value;
+  const unit = Number($("assistantEngine").value);
+  const question = $("questionInput").value.trim();
+  const button = $("askButton");
+  if (button.disabled || !/^FD00[1-4]$/.test(subset) || !Number.isSafeInteger(unit) || unit < 1 || question.length < 3 || question.length > 500) return;
+  button.disabled = true;
+  button.textContent = "Analyse en cours…";
+  chatHistory.push({ role:"user", subset, unit, question });
+  if (chatHistory.length > 14) chatHistory.splice(0, 2);
+  renderChat(true);
   try {
-    const r=await api("/ask",{method:"POST",body:{subset,unit,question}});
-    const policy=r.policy||{},usage=r.usage||{};
-    const verdict=r.requires_approval ? '<div class="ai-warning"><strong>⚠ Validation humaine requise.</strong> La politique ne permet aucune exécution automatique. Motif : '+esc(policy.reason||"vérification nécessaire")+'.</div>' : '<div class="detail-note" style="margin-top:14px">Décision de la politique : '+esc(statusText[policy.decision]||policy.decision||"non fournie")+'. Aucune autorisation de navigabilité n’est délivrée.</div>';
-    $("aiOutput").innerHTML='<div class="panel-title"><div><h3>Analyse du moteur ENG–'+esc(unit)+'</h3><p>'+esc(subset)+' · réponse du service IA</p></div>'+tag(policy.decision)+'</div><div class="ai-result">'+esc(r.answer||"Aucune réponse textuelle.")+'</div>'+verdict+'<div class="ai-meta"><span>Modèle : '+esc(usage.model||"—")+'</span><span>Latence : '+num(usage.latency_ms,1)+' ms</span><span>Jetons : '+num((usage.input_tokens||0)+(usage.output_tokens||0))+'</span>'+ (r.fallback_reason?'<span>Mode de repli : '+esc(r.fallback_reason)+'</span>':'')+'</div>';
-  } catch(err){$("aiOutput").innerHTML='<div class="ai-warning"><strong>Impossible d’obtenir une réponse IA.</strong> '+esc(err.message)+'</div>';}
-  finally{button.disabled=false;button.innerHTML='✧ Analyser le moteur <span>↗</span>';}
+    const r = await api("/ask", { method:"POST", body:{subset,unit,question} });
+    if (!r || typeof r.answer !== "string" || !r.answer.trim()) throw new Error("Le service n’a fourni aucune réponse exploitable.");
+    chatHistory.push({
+      role:"assistant", subset, unit, answer:r.answer, policy:r.policy || {},
+      usage:r.usage || {}, requiresApproval:Boolean(r.requires_approval),
+      fallbackReason:r.fallback_reason || null
+    });
+    renderChat(false);
+  } catch (err) {
+    chatHistory.push({ role:"error", message:"Le service IA a échoué : " + (err?.message || "erreur inconnue") });
+    renderChat(false);
+  } finally {
+    button.disabled = false;
+    button.innerHTML = '✧ Analyser le moteur <span>↗</span>';
+  }
 }
 document.addEventListener("click",async(e)=>{
   const button=e.target.closest("button");if(!button)return;
