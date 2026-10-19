@@ -57,21 +57,21 @@
         </div>
 
         <section class="view" data-section="overview">
-          <div class="section-heading"><div><span class="eyebrow">01 / SYNTHÈSE OPÉRATIONNELLE · NASA C-MAPSS</span><h1>Centre de contrôle<span class="heading-dot">.</span></h1><p>Identifier les risques, inspecter les tendances et documenter une décision fondée sur les données.</p></div><div class="heading-actions"><span class="updated" id="lastUpdated">En attente des données…</span><button class="btn btn-outline" id="exportButton">↓ Exporter CSV</button></div></div>
+          <div class="section-heading"><div><span class="eyebrow">MAINTENANCE PRÉDICTIVE</span><h1>Centre de contrôle<span class="heading-dot">.</span></h1><p>Risques moteur et analyses, en un coup d’œil.</p></div><div class="heading-actions"><span class="updated" id="lastUpdated">En attente des données…</span><button class="btn btn-outline" id="exportButton">↓ Exporter la flotte</button></div></div>
           <div class="command-deck" id="commandDeck">
             <section class="command-panel command-queue" aria-labelledby="commandQueueTitle">
-              <div class="command-panel-heading"><div><span class="command-overline">TRIAGE / TOUTES FLOTTES</span><h2 id="commandQueueTitle">File d'inspection prioritaire</h2><p>Moteurs ordonnés par niveau d’attention et durée de vie résiduelle. Cliquez pour analyser.</p></div><span class="command-chip">API AWS</span></div>
+              <div class="command-panel-heading"><div><span class="command-overline">TRIAGE / TOUTES FLOTTES</span><h2 id="commandQueueTitle">File d'inspection prioritaire</h2><p>Classés par priorité et cycles restants.</p></div><span class="command-chip">API AWS</span></div>
               <div class="queue-head" aria-hidden="true"><span>ACTIF / STATUT</span><span>INTERVALLE 80 %</span><span>RUL RESTANT</span></div>
               <div id="priorityRows" class="command-rows" aria-live="polite"><p class="empty">Chargement des moteurs depuis AWS…</p></div>
             </section>
             <aside class="command-panel command-situation" aria-labelledby="commandSituationTitle">
-              <div class="command-panel-heading"><div><span class="command-overline">CONTEXTE / MOTEUR SÉLECTIONNÉ</span><h2 id="commandSituationTitle">Analyse en cours</h2><p>Indicateurs vérifiables, sans prédiction inventée.</p></div></div>
+              <div class="command-panel-heading"><div><span class="command-overline">CONTEXTE / MOTEUR SÉLECTIONNÉ</span><h2 id="commandSituationTitle">Analyse en cours</h2><p>Moteur sélectionné.</p></div></div>
               <div id="commandFocus" class="command-focus"><p class="empty">Sélectionnez un moteur à gauche.</p></div>
             </aside>
           </div>
           <div class="data-covenant"><span class="data-covenant-icon" aria-hidden="true">i</span><p><strong>Périmètre des analyses.</strong> Données simulées NASA C-MAPSS. Indicateurs calculés par l’API ; assistance à la décision uniquement, sans certification de navigabilité.</p><span class="data-covenant-source">SOURCE : AWS / FASTAPI</span></div>
           <div class="metrics" id="metrics">
-            <article class="metric skeleton"><div class="metric-top"><span>Total moteurs analysés</span><i>↗</i></div><strong>—</strong><small>Chargement des données réelles</small></article>
+            <article class="metric skeleton"><div class="metric-top"><span>Total moteurs analysés</span><i>↗</i></div><strong>—</strong><small>Chargement depuis l’API</small></article>
             <article class="metric skeleton"><div class="metric-top"><span>Inspection prioritaire</span><i>!</i></div><strong>—</strong><small>En attente des flottes</small></article>
             <article class="metric skeleton"><div class="metric-top"><span>Inspection à planifier</span><i>◷</i></div><strong>—</strong><small>En attente des flottes</small></article>
             <article class="metric skeleton"><div class="metric-top"><span>Flottes disponibles</span><i>▦</i></div><strong>—</strong><small>En attente de l’API</small></article>
