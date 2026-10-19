@@ -147,8 +147,37 @@ function fleetDistribution() {
   $("overviewFleets").innerHTML = html + '<div class="distribution-legend"><span><i class="segment-critical"></i> Inspection prioritaire</span><span><i class="segment-plan"></i> À planifier</span><span><i class="segment-good"></i> Normal</span></div>';
 }
 function priorities() {
-  const engines = Object.values(state.enginesByFleet).flat().filter((e) => e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul))).sort((a,b) => Number(a.rul) - Number(b.rul)).slice(0,5);
-  $("priorityRows").innerHTML = engines.length ? engines.map((e) => '<button class="priority-row" data-priority-fleet="' + esc(e.subset) + '" data-unit="' + e.unit + '" data-jump="fleet"><span class="engine-mini-icon">✈</span><span class="priority-info"><strong>Moteur ' + esc(e.unit) + ' · ' + esc(e.subset) + '</strong><small>' + esc(statusText[e.status] || e.status) + '</small></span><span class="priority-value"><strong>' + num(e.rul,1) + '</strong><small>cycles restants</small></span></button>').join("") : '<p class="empty">Aucun moteur disponible pour cette flotte.</p>';
+  const order = {inspect_now:0,plan_inspection:1,healthy:2};
+  const engines=Object.values(state.enginesByFleet).flat()
+    .filter((e)=>e.rul !== null && e.rul !== undefined && e.rul !== "" && Number.isFinite(Number(e.rul)))
+    .sort((a,b)=>(order[a.status]??3)-(order[b.status]??3) || Number(a.rul)-Number(b.rul))
+    .slice(0,8);
+  $("priorityRows").innerHTML=engines.length?engines.map((e)=>
+    '<button class="priority-row queue-entry '+esc(e.status)+'" data-priority-fleet="'+esc(e.subset)+'" data-unit="'+e.unit+'" data-jump="fleet" aria-label="Examiner '+esc(e.subset)+' moteur '+e.unit+'">'
+    +'<span class="queue-identity"><span class="queue-state" aria-hidden="true"></span><span><strong>'+esc(e.subset)+' / ENG–'+esc(e.unit)+'</strong><small>'+esc(statusText[e.status]||e.status)+' · '+num(e.cycles_flown)+' cycles parcourus</small></span></span>'
+    +'<span class="queue-range">'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'<small>cycles · intervalle 80 %</small></span>'
+    +'<span class="queue-remaining"><strong>'+num(e.rul,1)+'</strong><small>cycles ↗</small></span></button>').join("")
+    :'<p class="empty">Les listes moteurs sont indisponibles. Aucune valeur n’est simulée côté interface.</p>';
+}
+function controlRoom() {
+  const t=totals();
+  $("ribbonCritical").textContent=num(t.critical);
+  $("ribbonPlan").textContent=num(t.planned);
+  $("ribbonActive").textContent=state.unit!=null ? (state.fleet+" / ENG–"+state.unit) : "Aucun moteur";
+  $("ribbonSync").textContent=state.loadedAt ? state.loadedAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) : "En attente API";
+  const e=selectedAssessment();
+  if (!e) {
+    $("commandFocus").innerHTML='<p class="empty">Aucune évaluation moteur disponible. Connectez l’API ou sélectionnez une flotte.</p>';
+    return;
+  }
+  const status=e.status==="inspect_now"?"Évaluation prioritaire":e.status==="plan_inspection"?"Inspection à planifier":"Surveillance normale";
+  const confidence=e.confidence==null?"—":num(Number(e.confidence)*100,1)+" %";
+  $("commandFocus").innerHTML=
+    '<div class="focus-context"><span>'+esc(e.subset)+' / ENG–'+esc(e.unit)+'</span>'+tag(e.status)+'</div>'
+    +'<div class="focus-reading"><div><span>RUL ESTIMÉ</span><strong>'+num(e.rul,1)+'</strong><small>cycles restants</small></div><p>'+esc(status)+'</p></div>'
+    +'<div class="focus-facts"><div><span>Intervalle 80 %</span><strong>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</strong></div><div><span>Cycles parcourus</span><strong>'+num(e.cycles_flown)+'</strong></div><div><span>Confiance statut</span><strong>'+confidence+'</strong></div></div>'
+    +'<div class="focus-actions"><button class="btn btn-outline" data-jump="fleet">Voir le diagnostic ↗</button><button class="btn btn-primary" data-copilot-intent="risk">Analyser avec l’IA ↗</button></div>'
+    +'<p class="focus-disclosure">Lecture du modèle sur données simulées. Une recommandation IA ne déclenche aucun ordre de maintenance.</p>';
 }
 function chart(history, key, label) {
   if (!/^[a-z][a-z0-9_]*$/i.test(key)) return '<p class="empty">Courbe indisponible.</p>';
@@ -203,7 +232,7 @@ function engineDetails() {
   const sensorSelector = firstSensor
     ? '<div class="sensor-control"><label for="sensorMetric">Évolution du capteur observé</label><select id="sensorMetric" aria-label="Choisir le capteur observé">' + sensorOptions.map(([k,description]) => '<option value="' + esc(k) + '">' + esc(description) + '</option>').join("") + '</select></div><div id="sensorTrend" class="detail-chart">' + chart(hist, firstSensor, sensors[firstSensor]) + '</div>'
     : '<p class="small-note">Aucun historique de capteur fourni.</p>';
-  $("engineDetails").innerHTML='<div class="engine-id-head"><span class="engine-mini-icon">✈</span><div><h2>ENG–'+esc(e.unit)+'</h2><p>'+esc(e.subset)+' · '+num(e.cycles_flown)+' cycles parcourus</p></div></div><div class="engine-rul"><div><span>DURÉE DE VIE RÉSIDUELLE</span><strong>'+num(e.rul,1)+' <small>cycles</small></strong></div><span class="rul-icon">⌁</span></div><div class="detail-split"><div class="detail-info"><span>Statut</span>'+tag(e.status)+'</div><div class="detail-info"><span>Confiance statut</span><strong>'+num(Number(e.confidence)*100,1)+' %</strong></div><div class="detail-info"><span>Intervalle 80 %</span><strong>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</strong></div><div class="detail-info"><span>Cycles parcourus</span><strong>'+num(e.cycles_flown)+'</strong></div></div><h4 class="engine-section-title">Tendance RUL</h4><div class="detail-chart">'+chart(hist,"rul","RUL du moteur "+e.unit)+'</div>'+sensorSelector+'<h4 class="engine-section-title">Dernières mesures normalisées</h4>'+Object.entries(sensors).map(([k,description])=>'<div class="sensor-row"><span title="'+esc(description)+'">'+esc(description)+'</span><strong>'+num(last[k],3)+'</strong></div>').join("")+'<p class="small-note">Capteurs normalisés pour le modèle, sans unités physiques. Analyse d’aide à la décision uniquement.</p><button class="btn btn-primary" data-jump="assistant" style="width:100%;margin-top:14px">✧ Interroger le copilote ↗</button>';
+  $("engineDetails").innerHTML='<div class="engine-id-head"><span class="engine-mini-icon">✈</span><div><h2>ENG–'+esc(e.unit)+'</h2><p>'+esc(e.subset)+' · '+num(e.cycles_flown)+' cycles parcourus</p></div></div><div class="engine-rul"><div><span>DURÉE DE VIE RÉSIDUELLE</span><strong>'+num(e.rul,1)+' <small>cycles</small></strong></div><span class="rul-icon">⌁</span></div><div class="detail-split"><div class="detail-info"><span>Statut</span>'+tag(e.status)+'</div><div class="detail-info"><span>Confiance statut</span><strong>'+num(Number(e.confidence)*100,1)+' %</strong></div><div class="detail-info"><span>Intervalle 80 %</span><strong>'+num(e.rul_low,1)+' – '+num(e.rul_high,1)+'</strong></div><div class="detail-info"><span>Cycles parcourus</span><strong>'+num(e.cycles_flown)+'</strong></div></div><h4 class="engine-section-title">Tendance RUL</h4><div class="detail-chart">'+chart(hist,"rul","RUL du moteur "+e.unit)+'</div>'+sensorSelector+'<h4 class="engine-section-title">Dernières mesures normalisées</h4>'+Object.entries(sensors).map(([k,description])=>'<div class="sensor-row"><span title="'+esc(description)+'">'+esc(description)+'</span><strong>'+num(last[k],3)+'</strong></div>').join("")+'<p class="small-note">Capteurs normalisés pour le modèle, sans unités physiques. Analyse d’aide à la décision uniquement.</p><div class="engine-ai-actions"><span>ANALYSE ASSISTÉE / CONTEXTE MOTEUR CONSERVÉ</span><button type="button" class="btn btn-primary" data-copilot-intent="risk">Évaluer la priorité ↗</button><button type="button" class="btn btn-outline" data-copilot-intent="uncertainty">Analyser l’incertitude ↗</button><button type="button" class="btn btn-outline" data-copilot-intent="sensors">Interpréter les capteurs ↗</button></div>';
 }
 function selectors() {
   const fleetSel=$("assistantFleet"),engineSel=$("assistantEngine");
@@ -212,7 +241,7 @@ function selectors() {
   engineSel.innerHTML=activeEngines().map((e)=>'<option value="'+e.unit+'">ENG–'+e.unit+' · '+num(e.rul,1)+' cycles</option>').join("");
   engineSel.value=state.unit==null?"":String(state.unit);
 }
-function render() { metrics();fleetDistribution();priorities();spotlights();fleetCards();engineTable();engineDetails();selectors(); }
+function render() { metrics();fleetDistribution();priorities();spotlights();fleetCards();engineTable();engineDetails();selectors();controlRoom(); }
 async function switchFleet(subset) {
   if (state.loading) return;
   clearError();
@@ -223,7 +252,7 @@ function showView(view) {
   state.view=view;
   document.querySelectorAll(".view").forEach((el)=>{el.hidden=el.dataset.section!==view;});
   document.querySelectorAll(".nav-link").forEach((button)=>{const active=button.dataset.view===view;button.classList.toggle("active",active);if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");});
-  const names={overview:"Vue d’ensemble",fleet:"Parc moteurs",assistant:"Copilote IA",audit:"Journal d’audit"};
+  const names={overview:"Centre de contrôle",fleet:"Diagnostic flotte",assistant:"Copilote d’analyse",audit:"Traçabilité"};
   $("breadcrumbCurrent").textContent=names[view];
   $("sidebar").classList.remove("open");$("backdrop").hidden=true;
   window.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
@@ -314,6 +343,20 @@ async function ask(e) {
 }
 document.addEventListener("click",async(e)=>{
   const button=e.target.closest("button");if(!button)return;
+  if(button.dataset.copilotIntent) {
+    const questions={
+      risk:"Analyse le RUL restant du moteur sélectionné par rapport au seuil d’inspection. Utilise les valeurs structurées, précise l’intervalle à 80 %, les incertitudes et les contrôles humains nécessaires.",
+      uncertainty:"Explique les limites de l’intervalle de prédiction RUL de ce moteur et les mesures à vérifier avant toute décision de maintenance.",
+      sensors:"Quels signaux capteurs sont associés au moteur sélectionné ? Distingue les faits transmis par l’API des hypothèses et précise les données non disponibles."
+    };
+    const question=questions[button.dataset.copilotIntent];
+    if(question && state.fleet && state.unit!=null){
+      showView("assistant");
+      $("questionInput").value=question;
+      if($("askForm").reportValidity()) $("askForm").requestSubmit();
+    }
+    return;
+  }
   if(button.dataset.view)showView(button.dataset.view);
   if(button.dataset.priorityFleet && button.dataset.priorityFleet !== state.fleet) await switchFleet(button.dataset.priorityFleet);
   if(button.dataset.unit){await loadEngine(button.dataset.unit);if(button.dataset.jump)showView(button.dataset.jump);}
