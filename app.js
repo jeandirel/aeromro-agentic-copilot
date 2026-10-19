@@ -8,7 +8,7 @@ const state = {
 };
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const num = (v, digits = 0) => Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits: digits }) : "—";
+const num = (v, digits = 0) => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits: digits }) : "—";
 const statusText = { inspect_now: "Inspection prioritaire", plan_inspection: "À planifier", healthy: "Surveillance normale", allow: "Recommandation permise", require_approval: "Validation humaine", deny: "Refusé" };
 const tag = (s) => '<span class="status ' + esc(s) + '">' + esc(statusText[s] || s || "Inconnu") + "</span>";
 const activeFleet = () => state.fleets.find((f) => f.subset === state.fleet);
@@ -68,7 +68,7 @@ async function init(refresh = false) {
       await Promise.allSettled(otherFleets.map(async (id) => {
         const payload = await api("/fleets/" + id + "/engines");
         if (!Array.isArray(payload?.engines)) throw new Error("Invalid engine list for " + id);
-        state.enginesByFleet[id] = payload.engines;
+        state.enginesByFleet[id] = payload.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && Number.isFinite(Number(e.rul)));
         state.thresholdsByFleet[id] = payload.thresholds || {};
       }));
     }
@@ -88,7 +88,7 @@ async function loadFleet(subset, opts = {}) {
   if (!state.enginesByFleet[subset] || opts.fresh) {
     const response = await api("/fleets/" + subset + "/engines");
     if (!Array.isArray(response?.engines)) throw new Error("Liste des moteurs invalide.");
-    state.enginesByFleet[subset] = response.engines;
+    state.enginesByFleet[subset] = response.engines.filter((e) => Number.isSafeInteger(Number(e.unit)) && Number(e.unit) > 0 && Number.isFinite(Number(e.rul)));
     state.thresholdsByFleet[subset] = response.thresholds || {};
   }
   const engines = activeEngines();
@@ -152,7 +152,7 @@ function priorities() {
 }
 function chart(history, key, label) {
   if (!/^[a-z][a-z0-9_]*$/i.test(key)) return '<p class="empty">Courbe indisponible.</p>';
-  const data = (history || []).filter((h) => Number.isFinite(Number(h[key])));
+  const data = (history || []).filter((h) => h[key] !== null && h[key] !== undefined && h[key] !== "" && Number.isFinite(Number(h[key])));
   if (data.length < 2) return '<p class="empty">Historique insuffisant pour dessiner une courbe.</p>';
   const W=720,H=230,left=48,right=15,top=15,bottom=33, w=W-left-right,h=H-top-bottom;
   const values=data.map((d)=>Number(d[key]));
@@ -241,7 +241,7 @@ function downloadCSV() {
   const rows=activeEngines();
   if(!rows.length){error("Aucune donnée moteur à exporter.");return;}
   const cols=["subset","unit","cycles_flown","rul","rul_low","rul_high","status","confidence"];
-  const quote=(v)=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const quote=(v)=>{const text=String(v??"");return '"'+(/^[=+@]/.test(text)? "'"+text : text).replace(/"/g,'""')+'"';};
   const body="\ufeff"+cols.join(";")+"\r\n"+rows.map((r)=>cols.map((c)=>quote(r[c])).join(";")).join("\r\n");
   const url=URL.createObjectURL(new Blob([body],{type:"text/csv;charset=utf-8;"}));
   const a=document.createElement("a");a.href=url;a.download="aeromro_"+state.fleet+"_moteurs.csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
@@ -270,7 +270,7 @@ function renderChat(pending = false) {
     ];
     if (entry.fallbackReason) tags.push("Mode de repli actif : " + entry.fallbackReason);
     const m = entry.engine || {};
-    const hasFacts = Number.isFinite(Number(m.rul)) && Number.isFinite(Number(m.rul_low)) && Number.isFinite(Number(m.rul_high));
+    const hasFacts = ["rul", "rul_low", "rul_high", "cycles_flown"].every((k) => m[k] !== null && m[k] !== undefined && m[k] !== "" && Number.isFinite(Number(m[k])));
     const factsHtml = hasFacts
       ? '<div class="copilot-verified-facts"><div class="verified-head"><strong>↗ Valeurs fournies par le modèle RUL</strong><small>Résultat structuré de l’API AWS</small></div><div class="verified-values"><div><span>Cycles restants (RUL)</span><strong>' + num(m.rul, 1) + '</strong></div><div><span>Intervalle prévisionnel 80 %</span><strong>' + num(m.rul_low, 1) + ' – ' + num(m.rul_high, 1) + '</strong></div><div><span>Cycles déjà parcourus</span><strong>' + num(m.cycles_flown) + '</strong></div><div><span>Priorité calculée</span>' + tag(m.status) + '</div></div><p>La priorité compare les <strong>cycles restants</strong> aux seuils ; elle ne compare pas les cycles déjà parcourus. Le texte généré par l’IA peut contenir des erreurs d’interprétation.</p></div>'
       : '<div class="chat-policy deny">Les valeurs RUL structurées ne sont pas disponibles : ne prenez aucune décision à partir de ce texte.</div>';
