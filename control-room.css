@@ -1,0 +1,258 @@
+/* AeroMRO / Control Room V2: mission first, no decorative hero. 2026. */
+:root{
+  --bg:#edf2f4;--ink:#142d3e;--nav:#0b1b2a;--line:#dce6ea;
+  --teal:#117c82;--teal-soft:#e6f4f2;--shadow:0 1px 0 rgba(24,53,69,.025);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  --danger:#b43e4d;--amber:#92641d;
+}
+html{scroll-behavior:smooth}
+body{background:#eef3f5;color:var(--ink);font-family:"DM Sans",sans-serif}
+[hidden],.view[hidden]{display:none!important}
+:focus-visible{outline:3px solid #50b2b8!important;outline-offset:3px}
+.skip-link{position:fixed;top:-80px;left:18px;z-index:300;background:white;padding:11px 17px;color:#16434f;border:2px solid #1b7b84;border-radius:7px;font-size:13px}
+.skip-link:focus{top:12px}
+.sidebar{width:240px;background:#0d1d2a;padding:25px 13px 20px;border-right:1px solid #1f3746}
+.main{margin-left:240px}
+.brand{margin:0 8px 39px}
+.brand-mark{width:43px;height:43px;background:linear-gradient(140deg,#2b6167,#153541);border:1px solid #386975;color:#d8fffa}
+.brand-title{font-size:18px;letter-spacing:-.7px}
+.brand-title small{font-size:7px;letter-spacing:1.6px}
+.workspace-label{font-family:var(--mono);font-size:9px;letter-spacing:1.1px;padding:0 10px;margin-bottom:12px;color:#7e9bab}
+.nav-list{gap:4px}
+.nav-link{font-size:12px;min-height:47px;color:#a9bfca;border:1px solid transparent;padding:11px 12px;border-radius:7px}
+.nav-link.active{background:#193e49;color:#effffd;border-color:#36616b;box-shadow:inset 3px 0 #74d1c5}
+.nav-link:hover{background:#1b3340}
+.nav-icon{width:24px}
+.sidebar-note{background:#162c39;border:1px solid #2c4958;padding:15px;border-radius:8px}
+.sidebar-note strong{font-size:11px;color:#f1fafc}
+.sidebar-note p{font-size:10px;line-height:1.65;color:#9aafbd}
+.sidebar-footer{border-top:1px solid #35505c;padding:15px 5px 0}
+.topbar{height:66px;padding:0 35px;background:#fff;position:sticky;top:0;z-index:12;border-bottom:1px solid #dce6ea}
+.breadcrumbs{font-family:var(--mono);font-size:9px;letter-spacing:.75px}
+.breadcrumbs strong{font-family:"DM Sans",sans-serif;font-size:11px;letter-spacing:0}
+.connection{font-size:10px}
+.simulation-tag{background:#f3f6f7;border:1px solid #e0e7e9;font-family:var(--mono);font-size:9px}
+.content{max-width:1800px;padding:28px 34px 22px;margin:auto}
+.section-heading{align-items:center;margin-bottom:21px}
+.section-heading h1{font:800 clamp(27px,2.8vw,38px)/1.13 Manrope,sans-serif;letter-spacing:-1.6px;color:#163144}
+.section-heading p{font-size:12px;color:#667c89}
+.eyebrow{font-family:var(--mono);letter-spacing:1.15px;font-size:9px;color:#2c8790}
+.heading-dot{color:#2b8490}
+.btn{border-radius:6px;font-weight:750;min-height:39px;gap:7px;box-shadow:none}
+.btn-primary{background:#117582;border-color:#117582;color:#fff}
+.btn-primary:hover{background:#0d5965}
+.btn-outline{background:#fff;border-color:#ccdadf;color:#264655}
+.updated{font-size:10px;color:#738b98}
+.panel,.metric,.fleet-card,.assistant-main,.assistant-side{box-shadow:0 1px 4px rgba(8,27,40,.018);border-radius:8px;border-color:#dce6ea}
+.panel{padding:20px}
+.panel-title h3{font-size:13px;letter-spacing:-.2px}
+.panel-title p{color:#6f8290;font-size:10px}
+.metrics{margin:0 0 17px;gap:12px}
+.metric{min-height:120px;padding:16px 17px;border-radius:8px;position:relative}
+.metric:after{content:"";height:2px;width:28px;background:#cddde1;position:absolute;bottom:0;left:18px}
+.metric.danger:after{background:#b34150}
+.metric.caution:after{background:#b9873b}
+.metric.safe:after{background:#1a8793}
+.metric strong{font:800 34px/1 Manrope,sans-serif;margin:14px 0 10px;letter-spacing:-1.5px}
+.metric-top{font-size:10px}
+.metric small{font-size:10px;line-height:1.5}
+.metric-top i{background:#f4f7f8;color:#456677}
+.operations-ribbon{display:flex;align-items:stretch;flex-wrap:wrap;gap:0;background:#102c3b;border:1px solid #244451;border-radius:8px;color:#d1e3e9;margin-bottom:27px;overflow:hidden;min-height:77px}
+.ribbon-identity{display:flex;gap:12px;align-items:center;padding:14px 22px;background:linear-gradient(130deg,#1b4a53,#143742);flex:1.25;min-width:205px}
+.ribbon-mark{display:grid;place-items:center;width:35px;height:35px;border:1px solid #56959b;border-radius:5px;color:#a7f2dc;font-size:21px;flex:none}
+.ribbon-identity strong{display:block;font:800 11px var(--mono);letter-spacing:1.2px;color:#f3fbfc}
+.ribbon-identity small{display:block;margin-top:4px;color:#a6c2ca;font-size:9px}
+.ribbon-stat{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border-left:1px solid #2a4a58;font-size:10px;min-width:145px;flex:1}
+.ribbon-stat strong{display:block;margin-top:5px;font:800 15px/1 var(--mono);color:#f4fafb}
+.ribbon-stat.critical{color:#f7c5c9}
+.ribbon-stat.planned{color:#f0d6a6}
+.ribbon-indicator{display:block;width:7px;height:7px;border-radius:50%;background:#ea7885;flex:none}
+.ribbon-stat.planned .ribbon-indicator{background:#d9af60}
+.ribbon-clock{display:flex;flex-direction:column;justify-content:center;text-align:right;border-left:1px solid #2a4a58;padding:12px 20px;min-width:155px}
+.ribbon-clock span{font:700 8px var(--mono);letter-spacing:.5px;color:#88a6b4}
+.ribbon-clock strong{font:800 12px var(--mono);margin-top:7px;color:#d3e9ec}
+.command-deck{display:grid;grid-template-columns:minmax(0,1.47fr) minmax(300px,.75fr);gap:14px;margin-bottom:15px;align-items:stretch}
+.command-panel{min-width:0;background:white;border:1px solid #dbe6eb;border-radius:9px;overflow:hidden}
+.command-panel-heading{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;padding:21px 23px 20px}
+.command-panel-heading h2{font:800 17px/1.3 Manrope,sans-serif;color:#173143;letter-spacing:-.5px;margin:6px 0 5px}
+.command-panel-heading p{font-size:10.5px;line-height:1.6;color:#677e8b;margin:0;max-width:450px}
+.command-overline{font:800 9px var(--mono);letter-spacing:1px;color:#278a94}
+.command-chip{white-space:nowrap;border:1px solid #c8dcdf;color:#2c7580;background:#eff8f8;border-radius:4px;padding:6px 8px;font:800 9px var(--mono)}
+.queue-head,.queue-entry{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(106px,.75fr) minmax(84px,.45fr);align-items:center;column-gap:12px}
+.queue-head{padding:10px 23px;background:#f5f8f9;border-top:1px solid #e3ebee;border-bottom:1px solid #e1e9ec;color:#69808c;font:750 8px var(--mono);letter-spacing:.6px}
+.queue-head span:last-child{text-align:right}
+.queue-entry{padding:12px 23px;border:0;border-bottom:1px solid #e9eff1;background:#fff;width:100%;text-align:left;min-height:66px;transition:background .12s}
+.queue-entry:last-child{border-bottom:0}
+.queue-entry:hover{background:#f2f9f9}
+.queue-entry:focus-visible{position:relative;z-index:1}
+.queue-identity{display:flex;align-items:center;gap:12px;min-width:0}
+.queue-identity strong{display:block;font:800 11px var(--mono);color:#214254;white-space:nowrap}
+.queue-identity small{display:block;font-size:9px;color:#708593;margin-top:5px;line-height:1.4}
+.queue-state{width:6px;height:26px;border-radius:3px;background:#a5b9be;flex:none}
+.queue-entry.inspect_now .queue-state{background:#bc4754}
+.queue-entry.plan_inspection .queue-state{background:#c58b35}
+.queue-entry.healthy .queue-state{background:#248b83}
+.queue-range{font:750 11px var(--mono);color:#415d6b}
+.queue-range small{display:block;font:500 9px "DM Sans",sans-serif;color:#8496a0;margin-top:5px}
+.queue-remaining{text-align:right}
+.queue-remaining strong{display:block;font:800 20px/1 Manrope,sans-serif;color:#223b4a;letter-spacing:-.8px}
+.queue-entry.inspect_now .queue-remaining strong{color:#b54350}
+.queue-remaining small{display:block;font-size:9px;margin-top:5px;color:#8398a1}
+.command-situation{background:#132e3d;border-color:#284856;color:#d9e8eb}
+.command-situation .command-panel-heading{border-bottom:1px solid #2d4c5b}
+.command-situation .command-overline{color:#9bd8d4}
+.command-situation .command-panel-heading h2{color:#f0f8fa}
+.command-situation .command-panel-heading p{color:#a7bfca}
+.command-focus{padding:19px 23px 17px}
+.focus-context{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:17px;font:800 12px var(--mono);color:#d5f3f0}
+.focus-context .status{font-family:"DM Sans",sans-serif}
+.focus-reading{display:flex;gap:15px;align-items:end;justify-content:space-between;border-bottom:1px solid #335463;padding-bottom:18px}
+.focus-reading>div>span{display:block;font:750 9px var(--mono);color:#91b5be;letter-spacing:.5px}
+.focus-reading strong{display:block;margin:7px 0 1px;font:800 clamp(35px,3.2vw,49px)/1 Manrope,sans-serif;color:#fff;letter-spacing:-2px}
+.focus-reading small{font-size:10px;color:#b1ced5}
+.focus-reading p{font-size:10px;line-height:1.45;max-width:112px;text-align:right;color:#d0e1e8;margin:0 0 4px}
+.focus-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:19px 0}
+.focus-facts>div{padding:12px 9px;border:1px solid #325060;border-radius:5px;background:#1a3a48}
+.focus-facts span{font-size:9px;display:block;color:#9dbbc7;min-height:25px;line-height:1.3}
+.focus-facts strong{display:block;margin-top:6px;font:800 13px var(--mono);white-space:nowrap;color:#ebf8f8}
+.focus-actions{display:flex;flex-wrap:wrap;gap:8px}
+.focus-actions .btn{flex:1;padding:10px 12px;min-width:120px;font-size:10px}
+.focus-actions .btn-outline{background:transparent;border-color:#547482;color:#ebf5f7}
+.focus-actions .btn-primary{background:#b8e8e1;border-color:#b8e8e1;color:#143a44}
+.focus-disclosure{font-size:9px;line-height:1.6;color:#93afbd;margin:16px 0 0}
+.data-covenant{border:1px solid #d7e6e7;border-left:3px solid #508f98;background:#f3f8f8;margin-bottom:16px;border-radius:5px;padding:10px 14px}
+.data-covenant p{font-size:10px;line-height:1.5}
+.data-covenant-source{font:700 8px var(--mono);color:#64828b}
+.overview-grid{grid-template-columns:minmax(0,1fr);margin-bottom:15px;gap:14px}
+.overview-grid.lower-grid{grid-template-columns:minmax(0,1.45fr) minmax(280px,.72fr)}
+.fleet-panel .fleet-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:30px;row-gap:19px}
+.fleet-panel .distribution-legend{grid-column:1/-1}
+.fleet-progress-head span{color:#607988}
+.fleet-progress-head strong{font-family:var(--mono)}
+.stack-bar{height:7px}
+.engine-ai-actions{border:1px solid #d2e4e5;background:#f2f9f8;padding:14px;border-radius:7px;display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.engine-ai-actions>span{flex:1 1 100%;font:800 9px var(--mono);letter-spacing:.35px;color:#416e74;padding-bottom:3px}
+.engine-ai-actions .btn{flex:1 1 120px;min-height:38px;font-size:10px}
+.fleet-cards{gap:11px}
+.fleet-card{border-radius:8px}
+.fleet-card.active{border-color:#248b92;box-shadow:inset 0 3px #258790}
+.fleet-card-head strong,.fleet-card-count{font-family:var(--mono);letter-spacing:-.5px}
+.engine-panel{border-top:3px solid #278a91}
+.engine-rul{background:#153748;border-radius:6px}
+.data-table th{font-family:var(--mono);letter-spacing:.5px;font-size:9px}
+.data-table td{font-size:11px}
+.status{border-radius:4px}
+.table-select{border-radius:5px}
+.chart-wrap{height:245px}
+.chart-grid-line{stroke:#e0e9ed}
+.assistant-banner{background:#173746;padding:21px 24px}
+.assistant-banner h2{font-size:17px}
+.assistant-banner p{font-size:11px}
+.assistant-glyph{border-radius:7px;background:#255463}
+.assistant-main{border-top:3px solid #328d93}
+.prompt-button{min-height:62px}
+.copilot-photo,.engine-cover,.aero-showcase,.hero{display:none!important}
+.compliance-note{background:#fff9ec;border-left:3px solid #b98f47}
+.audit-panel{border-top:3px solid #548c93}
+.page-footer{font-family:var(--mono);font-size:9px}
+@media(max-width:1400px){
+ .command-deck{grid-template-columns:minmax(0,1.25fr) minmax(300px,.83fr)}
+ .ribbon-identity{min-width:160px}
+ .ribbon-clock{min-width:128px}
+ .ribbon-stat{min-width:122px}
+ .content{padding:25px 23px}
+ .topbar{padding:0 23px}
+}
+@media(max-width:1180px){
+ .command-deck{grid-template-columns:1fr}
+ .command-situation .command-focus{display:grid;grid-template-columns:1.1fr 1.2fr;column-gap:18px}
+ .command-situation .focus-context{grid-column:1/-1}
+ .command-situation .focus-facts{margin:0}
+ .command-situation .focus-actions,.command-situation .focus-disclosure{grid-column:1/-1}
+ .overview-grid.lower-grid{grid-template-columns:1fr}
+ .ribbon-identity{flex-basis:100%}
+}
+@media(max-width:1040px){
+ .sidebar{width:218px}
+ .main{margin-left:218px}
+ .fleet-panel .fleet-overview{grid-template-columns:1fr}
+ .ribbon-identity{flex-basis:100%}
+}
+@media(max-width:730px){
+ .sidebar{width:268px}
+ .main{margin-left:0}
+ .topbar{height:58px;padding:0 13px}
+ .topbar-right .simulation-tag{display:none}
+ .breadcrumbs{font-size:8px}
+ .breadcrumbs strong{font-size:10px}
+ .connection{font-size:9px}
+ .content{padding:19px 12px}
+ .operations-ribbon{margin-bottom:20px}
+ .ribbon-identity{flex-basis:100%;padding:12px 14px}
+ .ribbon-stat{flex:1 1 50%;min-width:0;justify-content:start;padding:10px 12px;border-top:1px solid #284957;font-size:9px}
+ .ribbon-stat strong{font-size:12px}
+ .ribbon-clock{flex:1 1 100%;text-align:left;padding:10px 12px;border-top:1px solid #284957}
+ .ribbon-clock strong{font-size:11px;margin-top:4px}
+ .section-heading h1{font-size:27px}
+ .section-heading p{font-size:11px}
+ .command-panel-heading{padding:16px 14px}
+ .command-panel-heading h2{font-size:15px}
+ .command-panel-heading p{font-size:10px}
+ .queue-head,.queue-entry{grid-template-columns:minmax(0,1fr) minmax(65px,.45fr);gap:6px}
+ .queue-head{padding:10px 13px}
+ .queue-head span:nth-child(2),.queue-range{display:none}
+ .queue-entry{padding:11px 13px;min-height:62px}
+ .queue-identity{gap:9px}
+ .queue-identity strong{font-size:10px}
+ .queue-identity small{font-size:8.5px}
+ .queue-remaining strong{font-size:18px}
+ .command-focus{padding:16px 14px}
+ .command-situation .command-focus{display:block}
+ .command-situation .focus-facts{margin:16px 0}
+ .focus-facts{gap:5px}
+ .focus-facts>div{padding:10px 6px}
+ .focus-facts span{font-size:8px}
+ .focus-facts strong{font-size:10px}
+ .metrics{gap:8px}
+ .metric{padding:14px;min-height:111px}
+ .metric strong{font-size:28px}
+ .data-covenant-source{display:none}
+ .overview-grid.lower-grid{grid-template-columns:1fr}
+ .assistant-layout{grid-template-columns:1fr}
+ .fleet-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .fleet-panel .fleet-overview{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.sidebar,.topbar,.operations-ribbon,.btn,.filters,.engine-ai-actions{display:none!important}.main{margin:0}.content{padding:0}.view[hidden]{display:none!important}}
+
+.coverage-alert{padding:10px 20px;background:#fff6e8;border-bottom:1px solid #eddcbf;color:#895b22;font-size:10px;font-weight:700;line-height:1.5}
+@media(max-width:730px){.coverage-alert{padding:10px 13px}}
+
+/* Marketing/industry-only area: separated from the operational NASA C-MAPSS workspaces. */
+.industry-view{min-height:calc(100vh - 190px)}
+.industry-heading{margin-bottom:28px}
+.industry-phase{align-self:center;background:#e7f1f2;border:1px solid #d5e4e6;color:#456e78;padding:10px 13px;border-radius:6px;white-space:nowrap;font:800 9px var(--mono);letter-spacing:.55px}
+.industry-audience{margin-top:28px;border:1px solid #d8e6e9;background:#fff;border-radius:12px;padding:23px 26px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,1fr);gap:28px;align-items:center}
+.industry-audience h2{font:800 18px Manrope,sans-serif;letter-spacing:-.6px;margin:8px 0}
+.industry-audience p{font-size:12px;color:#708693;line-height:1.7;max-width:580px;margin:0}
+.industry-audience-types{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.industry-audience-types span{padding:8px 11px;border:1px solid #dce7e9;border-radius:6px;background:#f4f8f9;font-size:10px;font-weight:750;color:#406776}
+.industry-prospects{margin:20px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:11px;color:#7b8c96}
+.industry-prospects strong{flex:1 1 100%;font-size:10px;font-weight:700}
+.industry-prospects span{font:750 11px var(--mono);padding:7px 12px;border:1px solid #e1e8eb;border-radius:5px;color:#4d6876;background:#f8fafb}
+@media(max-width:730px){.industry-phase{font-size:8px}.industry-audience{grid-template-columns:1fr;padding:18px;gap:18px}.industry-audience-types{justify-content:flex-start}}
+
+/* Density tuning: the critical counts already live in the mission ribbon. */
+#metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+#metrics .metric{min-height:102px;padding:14px 18px}
+#metrics .metric strong{font-size:30px;margin:10px 0 6px}
+.command-panel-heading p{font-size:12px}
+.section-heading p{font-size:13px}
+.queue-identity strong{font-size:12px}
+.queue-identity small{font-size:10px}
+.queue-range{font-size:12px}
+.queue-remaining strong{font-size:22px}
+.focus-facts span{font-size:10px}
+.focus-facts strong{font-size:13px}
+.data-covenant p{font-size:11px}
+@media(max-width:730px){#metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#metrics .metric{min-height:105px}.queue-range{display:none}}
