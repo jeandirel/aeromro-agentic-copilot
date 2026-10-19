@@ -241,3 +241,18 @@ body{background:#eef3f5;color:var(--ink);font-family:"DM Sans",sans-serif}
 .industry-prospects strong{flex:1 1 100%;font-size:10px;font-weight:700}
 .industry-prospects span{font:750 11px var(--mono);padding:7px 12px;border:1px solid #e1e8eb;border-radius:5px;color:#4d6876;background:#f8fafb}
 @media(max-width:730px){.industry-phase{font-size:8px}.industry-audience{grid-template-columns:1fr;padding:18px;gap:18px}.industry-audience-types{justify-content:flex-start}}
+
+/* Density tuning: the critical counts already live in the mission ribbon. */
+#metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+#metrics .metric{min-height:102px;padding:14px 18px}
+#metrics .metric strong{font-size:30px;margin:10px 0 6px}
+.command-panel-heading p{font-size:12px}
+.section-heading p{font-size:13px}
+.queue-identity strong{font-size:12px}
+.queue-identity small{font-size:10px}
+.queue-range{font-size:12px}
+.queue-remaining strong{font-size:22px}
+.focus-facts span{font-size:10px}
+.focus-facts strong{font-size:13px}
+.data-covenant p{font-size:11px}
+@media(max-width:730px){#metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#metrics .metric{min-height:105px}.queue-range{display:none}}
