@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://images.unsplash.com">
   <script src="/app.js" defer></script>
   <script src="/premium.js?v=2" defer></script>
+  <script src="/aircraft-gallery.js?v=1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#appMain">Passer à l’espace de travail</a>
@@ -31,6 +32,7 @@
         <button class="nav-link" data-view="fleet"><span class="nav-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M7 7V4h10v3M3 12h18M8 16h2m4 0h2"/></svg></span><span>Diagnostic flotte</span></button>
         <button class="nav-link" data-view="assistant"><span class="nav-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m12 2 1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2ZM20 17l.8 2.2L23 20l-2.2.8L20 23l-.8-2.2L17 20l2.2-.8L20 17Z"/></svg></span><span>Copilote d’analyse</span></button>
         <button class="nav-link" data-view="audit"><span class="nav-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M7 5h14M7 12h14M7 19h14"/><circle cx="3.5" cy="5" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="19" r="1"/></svg></span><span>Traçabilité</span></button>
+        <button class="nav-link" data-view="industry"><span class="nav-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M2 20h20M5 20V8l5-3v15M10 11l7-4v13M17 12l4-2v10"/><path d="M7 12h1m-1 4h1m5-3h1m-1 4h1"/></svg></span><span>Écosystème aviation</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-note"><span class="note-spark">✦</span><strong>Decision support</strong><p>Prédictions d’aide à la maintenance. Aucune décision de navigabilité automatique.</p></div>
@@ -111,6 +113,16 @@
             </div>
             <aside class="panel assistant-side"><div class="panel-title"><div><h3>À propos du système</h3><p>Contexte de la réponse IA</p></div></div><div class="side-feature"><span>01</span><div><strong>Données vérifiables</strong><p>Prédictions RUL, intervalles de confiance et cycles issus de l’API.</p></div></div><div class="side-feature"><span>02</span><div><strong>Contrôle des actions</strong><p>La politique peut exiger une validation humaine. Aucun ordre de travail n’est émis par cette interface.</p></div></div><div class="side-feature"><span>03</span><div><strong>Transparence technique</strong><p>Les réponses présentent le modèle utilisé, la latence et un éventuel mécanisme de repli.</p></div></div><div class="compliance-note"><b>⚑ AVERTISSEMENT</b><p>Projet de recherche sur données simulées. Ne pas utiliser pour les décisions de vol ou de maintenance réelle.</p></div></aside>
           </div>
+        </section>
+
+        <section class="view industry-view" data-section="industry" hidden>
+          <div class="section-heading industry-heading"><div><span class="eyebrow">05 / VISION PRODUIT · ÉCOSYSTÈME AÉRONAUTIQUE</span><h1>Applications aéronautiques<span class="heading-dot">.</span></h1><p>Une expérience conçue pour les équipes techniques et les environnements MRO exigeants.</p></div><span class="industry-phase">CAPACITÉS ENVISAGÉES</span></div>
+          <aero-aircraft-gallery aria-label="Galerie des familles d'appareils aéronautiques"></aero-aircraft-gallery>
+          <section class="industry-audience" aria-labelledby="industryAudienceTitle">
+            <div><span class="command-overline">MARCHÉ CIBLE / SANS PARTENARIAT REVENDIQUÉ</span><h2 id="industryAudienceTitle">Pensé pour l'écosystème aéronautique</h2><p>Un socle d’analyse pour les motoristes, constructeurs, opérateurs et sociétés de maintenance, à développer selon leurs exigences techniques, de sécurité et de certification.</p></div>
+            <div class="industry-audience-types"><span>Constructeurs</span><span>Motoristes</span><span>Compagnies aériennes</span><span>MRO</span></div>
+          </section>
+          <div class="industry-prospects"><strong>Entreprises auxquelles une offre pourrait s’adresser :</strong><span>Safran Aircraft Engines</span><span>Airbus</span><span>AFI KLM E&amp;M</span><span>Lufthansa Technik</span></div>
         </section>
 
         <section class="view" data-section="audit" hidden>
