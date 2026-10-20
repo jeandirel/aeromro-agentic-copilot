@@ -38,7 +38,7 @@ export function EngineTable({
   }
   const visible = rows.slice(0, limit);
   return (
-    <div className="scrollbar-thin overflow-auto lg:max-h-[calc(100dvh-20rem)]">
+    <div className="@container scrollbar-thin overflow-y-auto lg:max-h-[calc(100dvh-20rem)]">
       <table className="w-full text-sm">
         <caption className="sr-only">{int(rows.length)} moteurs, triés selon le choix courant</caption>
         <thead className="sticky top-0 z-[2] bg-surface">
@@ -71,15 +71,16 @@ export function EngineTable({
                   </Link>
                 </th>
                 <td className="px-2">
-                  <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium", toneText[meta.tone])}>
+                  {/* Narrow list: the shape and colour carry the status, the words stay for screen readers. */}
+                  <span title={meta.short} className={cn("inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium", toneText[meta.tone])}>
                     <ToneMark tone={meta.tone} />
-                    {meta.short}
+                    <span className="sr-only @[36rem]:not-sr-only">{meta.short}</span>
                   </span>
                 </td>
                 <td className="px-2">
-                  <div className="flex min-w-36 items-center gap-2">
-                    <span className="readout w-11 shrink-0 text-right text-predicted">{cycles(e.rul)}</span>
-                    <RulTape rul={e.rul} low={e.rul_low} high={e.rul_high} thresholds={thresholds} max={max} />
+                  <div className="flex items-center gap-2">
+                    <span className="readout w-10 shrink-0 text-right text-predicted">{cycles(e.rul)}</span>
+                    <RulTape className="min-w-12" rul={e.rul} low={e.rul_low} high={e.rul_high} thresholds={thresholds} max={max} />
                   </div>
                 </td>
                 <td className="readout px-2 pr-4 text-right text-ink">{int(e.cycles_flown)}</td>

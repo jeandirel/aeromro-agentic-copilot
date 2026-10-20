@@ -55,7 +55,9 @@ flight-deck displays; text and numbers use **Archivo** with tabular figures.
 
 ## Workspaces
 
-- **Vue d’ensemble**: triage headline from `/fleets`, fleet RUL map (every engine on one RUL axis),
+- **Vue d’ensemble**: compact status band from `/fleets` (headline and the four counts, each linked to the
+  filtered engine list; dark flight-deck tokens in both themes), fleet RUL map (every engine on one RUL axis,
+  drawn with the status shapes),
   cross-fleet inspection queue, model reliability per fleet (RMSE, measured coverage of the 80 %
   interval against its target).
 - **Santé moteur**: fleet, status, search and sort filters kept in the URL; diagnosis with observed /

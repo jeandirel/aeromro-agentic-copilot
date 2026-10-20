@@ -47,7 +47,9 @@
   color-scheme: light;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+/* A dark surface inside the light theme (the fleet status band) reuses the dark tokens. */
+.scheme-dark {
   --canvas: #0b1520;
   --surface: #111e2b;
   --surface-2: #152435;

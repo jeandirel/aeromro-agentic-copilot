@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight, Download, MessageSquareText } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ClipboardCheck, Download, MessageSquareText } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router";
 import { useEngineDetail, useEngines, useFleets } from "@/lib/api/queries";
@@ -42,7 +42,7 @@ export function EngineDetailPanel({ subset, unit, max, backTo }: { subset: Fleet
   }
 
   return (
-    <article aria-labelledby="engine-title" className="space-y-5">
+    <article aria-labelledby="engine-title" className="@container space-y-5">
       <BackLink to={backTo} />
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-line bg-surface p-5 sm:p-6">
         <div className="min-w-0">
@@ -53,11 +53,6 @@ export function EngineDetailPanel({ subset, unit, max, backTo }: { subset: Fleet
           <h2 id="engine-title" className="mt-2 text-2xl font-semibold sm:text-3xl">
             Moteur <span className="ident">{unitLabel(unit)}</span>
           </h2>
-          {engine && thresholds && (
-            <p className={cn("mt-1 text-sm", toneText[STATUS_META[engine.status].tone])}>
-              {STATUS_META[engine.status].action}. <span className="text-ink-2">Règle : {statusRule(engine.status, thresholds)}.</span>
-            </p>
-          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="primary">
@@ -89,7 +84,7 @@ export function EngineDetailPanel({ subset, unit, max, backTo }: { subset: Fleet
           {engine && thresholds ? (
             <>
               <RulTape size="lg" rul={engine.rul} low={engine.rul_low} high={engine.rul_high} thresholds={thresholds} max={max} />
-              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 @2xl:grid-cols-4">
                 <Readout label="Cycles parcourus" value={int(engine.cycles_flown)} provenance="observed" hint="Depuis le début de l’enregistrement" />
                 <Readout label="RUL estimé" value={cycles(engine.rul)} unit="cycles" provenance="predicted" hint="Cycles restants" />
                 <Readout label="Intervalle à 80 %" value={interval(engine.rul_low, engine.rul_high)} provenance="predicted" size="sm" hint="Bornes basse et haute" />
@@ -100,7 +95,17 @@ export function EngineDetailPanel({ subset, unit, max, backTo }: { subset: Fleet
                   hint={engine.confidence < 1 ? "L’intervalle chevauche un seuil" : "Intervalle dans une seule bande"}
                 />
               </dl>
-              <p className="mt-5 rounded-md bg-surface-2 p-3 text-sm text-ink-2">
+              <div className="mt-6 flex gap-3 rounded-md border-l-[3px] border-policy bg-policy-soft px-4 py-3.5">
+                <ClipboardCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-policy" />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-policy">Recommandation</p>
+                  <p className={cn("mt-0.5 font-semibold", toneText[STATUS_META[engine.status].tone])}>{STATUS_META[engine.status].action}.</p>
+                  <p className="mt-0.5 text-sm text-ink-2">
+                    Règle : {statusRule(engine.status, thresholds)}. Toute décision reste validée par un ingénieur de maintenance certifié.
+                  </p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-ink-2">
                 Le statut compare les <strong className="font-semibold text-ink">cycles restants estimés</strong> aux seuils de {thresholds.inspect_now} et {thresholds.plan_inspection} cycles, jamais les cycles déjà parcourus. La confiance est la part de l’intervalle à 80 % située dans la même bande que l’estimation.
               </p>
             </>
@@ -146,7 +151,7 @@ export function EngineDetailPanel({ subset, unit, max, backTo }: { subset: Fleet
           <h3 id="sensors-title" className="text-lg font-semibold">Capteurs clés</h3>
           <p className="text-sm text-ink-2">Mesures observées, normalisées par régime de vol par le modèle. Valeur de fin de période et variation sur la fenêtre affichée.</p>
         </div>
-        <div className="grid gap-3 px-5 py-5 sm:grid-cols-2 sm:px-6">
+        <div className="grid gap-3 px-5 py-5 @lg:grid-cols-2 sm:px-6">
           {detail.data ? (
             Object.entries(detail.data.sensors).map(([key, label]) => (
               <Suspense key={key} fallback={<Skeleton className="h-32" />}>

@@ -81,7 +81,7 @@ await step("Dashboard", async () => {
   const lcpish = Date.now() - started;
   check("Dashboard: fleet headline rendered from /fleets", true, `${lcpish} ms to headline`);
   await page.locator("#rul-map svg[role=img]").waitFor();
-  const dots = await page.locator("#rul-map svg circle").count();
+  const dots = await page.locator("#rul-map svg [data-engine]").count();
   check("Dashboard: RUL map plots the in-service engines", dots > 0, `${dots} engines`);
   const rows = await page.locator("#priority table tbody tr").count();
   check("Dashboard: inspection queue lists engines", rows > 0, `${rows} rows`);
@@ -284,7 +284,7 @@ await step("Phone", async () => {
   };
   await mobile.goto(`${base}/`);
   await mobile.locator("#hero-title").filter({ hasText: /moteur/ }).waitFor();
-  await mobile.locator("#rul-map svg circle").first().waitFor();
+  await mobile.locator("#rul-map svg [data-engine]").first().waitFor();
   check("Phone: bottom navigation visible", await mobile.locator("nav[aria-label='Navigation principale']").last().isVisible());
   await overflow("dashboard");
   await mobile.screenshot({ path: `${artifacts}phone-dashboard.png`, fullPage: true });
