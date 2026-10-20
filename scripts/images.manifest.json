@@ -1,20 +1,21 @@
 {
-  "outputDir": ".image-candidates",
-  "metadataFile": ".image-candidates/candidates.json",
-  "widths": [1200],
-  "formats": ["webp"],
+  "outputDir": "public/images",
+  "metadataFile": "src/content/images.generated.json",
+  "widths": [480, 960, 1440],
+  "formats": ["avif", "webp"],
   "images": [
-    { "slug": "b777-hangar-a", "nasaId": "LRC-2026-OCIO_P-02358" },
-    { "slug": "b777-hangar-b", "nasaId": "LRC-2026-OCIO_P-02146" },
-    { "slug": "b777-hangar-c", "nasaId": "LRC-2026-OCIO_P-02363" },
-    { "slug": "b777-hangar-d", "nasaId": "LRC-2026-OCIO_P-02147" },
-    { "slug": "b777-hangar-e", "nasaId": "LRC-2026-OCIO_P-01032" },
-    { "slug": "turbofan-aapl-a", "nasaId": "GRC-2014-C-04835" },
-    { "slug": "turbofan-aapl-b", "nasaId": "GRC-2014-C-04830" },
-    { "slug": "turbofan-aapl-c", "nasaId": "GRC-2014-C-04823" },
-    { "slug": "uhb-fan", "nasaId": "GRC-2015-C-04208" },
-    { "slug": "uhb-fan-tunnel", "nasaId": "GRC-2015-C-04209" },
-    { "slug": "psl-control-a", "nasaId": "GRC-2025-C-07467" },
-    { "slug": "psl-control-b", "nasaId": "GRC-2025-C-07466" }
+    {
+      "slug": "hangar-b777",
+      "nasaId": "LRC-2026-OCIO_P-02363",
+      "widths": [640, 1024, 1600, 2400],
+      "crop": { "left": 0, "top": 0.06, "width": 1, "height": 0.82 }
+    },
+    {
+      "slug": "turbofan-inspection",
+      "nasaId": "GRC-2014-C-04835",
+      "crop": { "left": 0.053, "top": 0.128, "width": 0.894, "height": 0.744 }
+    },
+    { "slug": "engine-test-control", "nasaId": "GRC-2025-C-07467" },
+    { "slug": "engine-test-consoles", "nasaId": "GRC-2025-C-07466" }
   ]
 }
