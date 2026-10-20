@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+/* Dark mode follows the data-theme attribute set by /theme-init.js and the theme menu. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * AeroMRO design tokens.
+ *
+ * Colour semantics borrow from flight-deck conventions (ECAM / glass cockpit):
+ *   ink       observed values (what the sensors and counters measured)
+ *   predicted magenta, values computed by the RUL model (estimates, intervals, confidence)
+ *   policy    cyan, recommendations, policy decisions and interactive elements
+ *   warn      red, inspect before next flight
+ *   caution   amber, plan an inspection
+ *   normal    green, keep monitoring
+ * Status is never carried by colour alone: every coloured mark has a text label.
+ */
+:root {
+  --canvas: #eef1f5;
+  --surface: #ffffff;
+  --surface-2: #f6f8fa;
+  --sunken: #e4e9ef;
+  --ink: #0f2236;
+  --ink-2: #3f5268;
+  --ink-3: #5a6c81;
+  --line: #d6dde5;
+  --line-strong: #b3bfcc;
+  --control: #788a9d;
+
+  --policy: #006b88;
+  --policy-strong: #005269;
+  --policy-soft: #e0f1f6;
+  --on-policy: #ffffff;
+  --predicted: #a01d88;
+  --predicted-soft: #f8e6f4;
+  --warn: #bd2719;
+  --warn-soft: #fbe8e5;
+  --caution: #8a5300;
+  --caution-fill: #e09c00;
+  --caution-soft: #fcf0d8;
+  --normal: #18724a;
+  --normal-fill: #2e9e68;
+  --normal-soft: #e2f2e9;
+
+  --scrim: 11 21 32;
+  --shadow-pop: 0 12px 32px -12px rgb(15 34 54 / 0.28), 0 2px 6px rgb(15 34 54 / 0.08);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --canvas: #0b1520;
+  --surface: #111e2b;
+  --surface-2: #152435;
+  --sunken: #08111a;
+  --ink: #e6edf4;
+  --ink-2: #afbfcf;
+  --ink-3: #8a9db1;
+  --line: #22364b;
+  --line-strong: #34506b;
+  --control: #5a7590;
+
+  --policy: #5cc9e6;
+  --policy-strong: #8bdaf0;
+  --policy-soft: #0f3341;
+  --on-policy: #04202a;
+  --predicted: #e98af2;
+  --predicted-soft: #3a1838;
+  --warn: #ff7266;
+  --warn-soft: #3d1714;
+  --caution: #ffb84d;
+  --caution-fill: #f0a020;
+  --caution-soft: #38270b;
+  --normal: #4bd391;
+  --normal-fill: #2fb873;
+  --normal-soft: #0f3324;
+
+  --shadow-pop: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 2px 8px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-control: var(--control);
+  --color-policy: var(--policy);
+  --color-policy-strong: var(--policy-strong);
+  --color-policy-soft: var(--policy-soft);
+  --color-on-policy: var(--on-policy);
+  --color-predicted: var(--predicted);
+  --color-predicted-soft: var(--predicted-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-caution: var(--caution);
+  --color-caution-fill: var(--caution-fill);
+  --color-caution-soft: var(--caution-soft);
+  --color-normal: var(--normal);
+  --color-normal-fill: var(--normal-fill);
+  --color-normal-soft: var(--normal-soft);
+  --shadow-pop: var(--shadow-pop);
+}
+
+@theme {
+  --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-instrument: "B612 Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Type scale: 1.2 ratio around a 15 px body. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.05rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.2rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.85rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.15rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 2.6rem;
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 3.25rem;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --breakpoint-xs: 30rem;
+  --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+  --animate-rise: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    font-synthesis-weight: none;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--policy) 28%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--policy);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  h1, h2, h3 {
+    font-stretch: 108%;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Numeric values: tabular figures so columns of numbers align. */
+  .readout {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0;
+  }
+  /* Identifiers and codes (fleets, engine numbers, sensor codes, model ids) use B612 Mono,
+     the typeface designed for Airbus flight-deck displays. */
+  .ident {
+    font-family: var(--font-instrument);
+    font-variant-numeric: slashed-zero;
+    letter-spacing: 0.01em;
+  }
+  .stretched-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--line) 55%, transparent) 1px, transparent 1px);
+    background-size: 25% 100%;
+  }
+}
