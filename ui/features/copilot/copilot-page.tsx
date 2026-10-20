@@ -340,7 +340,12 @@ export default function CopilotPage() {
           <div ref={endRef} />
         </div>
 
-        <form onSubmit={onSubmit} className="sticky bottom-16 border-t border-line bg-surface p-3 sm:p-4 lg:static" aria-label="Poser une question">
+        <form
+          onSubmit={onSubmit}
+          // On phones the composer stays above the tab bar once a conversation exists; before that it follows the suggestions.
+          className={cn("border-t border-line bg-surface p-3 sm:p-4 lg:static", (thread.length > 0 || busyHere) && "sticky bottom-16")}
+          aria-label="Poser une question"
+        >
           {thread.length > 0 && !pending && (
             <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-thin">
               {suggestions.slice(0, 3).map((s) => (
