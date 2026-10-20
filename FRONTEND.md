@@ -10,7 +10,7 @@ there is no seeded, hard-coded or generated engine data, and no simulated copilo
 | --- | --- | --- |
 | UI | React 19, TypeScript (strict, `noUncheckedIndexedAccess`) | typed components instead of string-built HTML; safe text rendering (no `innerHTML`) |
 | Build | Vite 8 | static output for Vercel, route-level code splitting (charts load only on the engine page) |
-| Styling | Tailwind CSS 4 with CSS-variable design tokens | light and dark themes from one token set |
+| Styling | Tailwind CSS 4 with CSS-variable design tokens | light theme only; a `.scheme-dark` token scope for the dark status band |
 | Primitives | Radix UI (`radix-ui`) | accessible popover, tooltip, dialog, menu, tabs, toggle group |
 | Server state | TanStack Query 5 | cache, retries, refetch, request cancellation |
 | Contracts | Zod 4 | every API response is validated before it reaches a component |
@@ -23,7 +23,7 @@ TanStack Table and an animation library were evaluated and left out: a sortable,
 of at most 707 engines and a single entrance animation do not justify the extra weight.
 
 ```
-index.html            Vite entry (theme bootstrap in public/theme-init.js, CSP-safe)
+index.html            Vite entry (light theme only)
 ui/
   app.tsx             providers and routes (/, /engines, /engines/:fleet/:unit, /copilot, /audit)
   lib/api/            client (timeouts, errors), Zod schemas, TanStack Query hooks
@@ -56,7 +56,7 @@ flight-deck displays; text and numbers use **Archivo** with tabular figures.
 ## Workspaces
 
 - **Vue d’ensemble**: compact status band from `/fleets` (headline and the four counts, each linked to the
-  filtered engine list; dark flight-deck tokens in both themes), fleet RUL map (every engine on one RUL axis,
+  filtered engine list; dark flight-deck tokens), fleet RUL map (every engine on one RUL axis,
   drawn with the status shapes),
   cross-fleet inspection queue, model reliability per fleet (RMSE, measured coverage of the 80 %
   interval against its target).
