@@ -1,62 +1,150 @@
-# AeroMRO — operations frontend
+# AeroMRO — operations console
 
-Responsive, dependency-free operations UI, connected **only** to the existing FastAPI routes. There is no seeded, hard-coded or randomly generated flight or engine data.
+Single-page application served by Vercel, talking **only** to the existing FastAPI service on AWS
+Lambda through a same-origin gateway (`api/proxy.js`). Every number on screen comes from the API;
+there is no seeded, hard-coded or generated engine data, and no simulated copilot answer.
 
-## Product surfaces
+## Architecture
 
-- **Overview**: live fleet status counts, risk distribution, inspection priorities, RUL history and selected-engine assessment.
-- **Engine fleet**: four NASA C-MAPSS subsets when deployed; search, status filter, engine selection, confidence interval and normalized sensor measurements.
-- **Copilot**: user-initiated questions to `POST /ask` with policy decisions, explicit human review, model identity, usage and fallback notice.
-- **Audit**: `GET /audit`; the backend holds records in memory per Lambda instance, so this is **not** a durable compliance log.
-- CSV exports always contain the actual selected fleet dataset.
+| Layer | Choice | Why |
+| --- | --- | --- |
+| UI | React 19, TypeScript (strict, `noUncheckedIndexedAccess`) | typed components instead of string-built HTML; safe text rendering (no `innerHTML`) |
+| Build | Vite 8 | static output for Vercel, route-level code splitting (charts load only on the engine page) |
+| Styling | Tailwind CSS 4 with CSS-variable design tokens | light and dark themes from one token set |
+| Primitives | Radix UI (`radix-ui`) | accessible popover, tooltip, dialog, menu, tabs, toggle group |
+| Server state | TanStack Query 5 | cache, retries, refetch, request cancellation |
+| Contracts | Zod 4 | every API response is validated before it reaches a component |
+| Charts | hand-drawn SVG instruments (RUL tape, fleet RUL map) + Recharts 3 for time series | the signature instruments need exact control; time series need tooltips |
+| Icons, fonts | Lucide; Archivo and B612 Mono, self-hosted | no third-party requests, strict CSP |
 
-The source is plain HTML, CSS and JavaScript for low initial complexity and fast deployment. The AG-UI streaming, A2A orchestration, regulation citations and human approval workflows remain **future backend features**; the UI does not pretend those endpoints currently exist.
-
-## Deployment
-
-1. Import the GitHub repository `jeandirel/aeromro-agentic-copilot` into Vercel or connect the existing `aeromro-agentic-copilot` project.
-2. Set **Root Directory** to repository root `./`; **Framework Preset**: Other. No build command and no output directory override.
-3. Set server-side variables:
-   - `AEROMRO_API_BASE_URL` — deployed HTTPS AWS Lambda base URL; if omitted the project uses the public API URL documented in the root README.
-   - `AEROMRO_DEMO_ACCESS_CODE` — **only if** `POST /ask` is protected by an access code. Keep this server-side; do not prefix with `NEXT_PUBLIC_` or expose it in the browser.
-4. Deploy. Verify `GET /api/proxy?path=%2Fhealth`, then open the UI and navigate through the four screens.
-5. Run `npm run test:ui` locally or use the `AeroMRO UI` GitHub workflow.
-
-The Vercel serverless proxy allows only named routes and request methods. It does not accept arbitrary upstream hosts or bypass the API's policy checks.
-
-## Safety, scope and constraints
-
-- Source: **NASA C-MAPSS simulated turbofan engine data**. Not a certified MRO system.
-- RUL and status values are estimates. The 80% RUL interval is shown separately from the policy's confidence score.
-- The UI **cannot** ground an engine, issue a work order or approve a flight.
-- Unreachable API or empty data returns visible error/empty states, never synthetic success metrics.
-- Responsive layout, keyboard-accessible controls, explicit status text in addition to color, reduced-motion support.
-- Backend files under `src/`, `infra/` and deployment workflows for AWS are unchanged.
-
-## API contracts consumed
+Next.js was not adopted: the console is fully client-driven by live API data, needs no SSR or SEO,
+and the existing Vercel function already provides the only server-side piece (the gateway).
+TanStack Table and an animation library were evaluated and left out: a sortable, filterable list
+of at most 707 engines and a single entrance animation do not justify the extra weight.
 
 ```
-GET  /health
-GET  /fleets
-GET  /fleets/{FD001..FD004}/engines
-GET  /fleets/{FD001..FD004}/engines/{unit}?history=60
-GET  /audit?limit=50
-POST /ask
+index.html            Vite entry (theme bootstrap in public/theme-init.js, CSP-safe)
+ui/
+  app.tsx             providers and routes (/, /engines, /engines/:fleet/:unit, /copilot, /audit)
+  lib/api/            client (timeouts, errors), Zod schemas, TanStack Query hooks
+  lib/                formatting (fr-FR), domain vocabulary, CSV export, theme, copilot session store
+  components/         layout shell, UI primitives, instruments (RUL tape, fleet map), charts
+  features/           dashboard, engines, copilot, audit
+  content/            generated photo metadata (credits, sizes, blur placeholders)
+api/proxy.js          Vercel function: allowlisted gateway to the AWS API
+public/images/        optimised NASA photographs (AVIF + WebP, responsive widths)
+scripts/              local preview server, image pipeline
+e2e/                  browser journey, screenshots
+tests/proxy.test.mjs  gateway security tests
 ```
 
-## Premium imagery and assistant UX (October 2026)
+## Design language
 
-Visual sources are illustrative only; they are not the NASA C-MAPSS predictive data or pictures of the four FD00X test fleets.
+Colour follows flight-deck conventions, so provenance is readable at a glance:
 
-- Unsplash free photograph of a jet engine by [Joao](https://unsplash.com/photos/dqrwTvNAAH0), served from Unsplash's image CDN; used in the hero and Copilot header. Licensed under the Unsplash License; image loads from the provider rather than a local copy.
-- [NASA research aircraft in maintenance hangar](https://svs.gsfc.nasa.gov/12179), photographed for NASA (illustrative editorial card).
-- [U.S. Air Force turbine fan photo](https://www.tinker.af.mil/News/Article-Display/Article/846288/usaf-engines-tired-iron-and-cost-effective-readiness/), used in diagnostics and illustration cards.
-- [NASA ground crew technicians](https://images.nasa.gov/) (image AFRC2026-0012-076), used in the Copilot safety card.
+- **ink**: observed values (cycles flown, sensors);
+- **magenta**: values computed by the RUL model (estimate, 80 % interval, confidence);
+- **cyan**: recommendations, policy decisions and interactive elements;
+- **red / amber / green**: inspect before next flight / plan an inspection / keep monitoring, always
+  with a text label and a distinct shape (square, triangle, circle).
 
-All photographs have graceful backgrounds if external loading fails. No image is presented as evidence for maintenance or as a prediction.
+The signature instrument is the **RUL tape**, modelled on a primary-flight-display tape: status
+bands from the API thresholds, the magenta point estimate and its interval. It appears at three
+sizes (tables, copilot, diagnosis). Identifiers use **B612 Mono**, the typeface designed for Airbus
+flight-deck displays; text and numbers use **Archivo** with tabular figures.
 
-The Copilot offers contextual starter questions and per-session chat history. Every assistant answer is returned by the existing AWS `POST /ask` endpoint; policy decisions, human-review requirements, model and fallback are shown explicitly. There are no local/generated answers. Keyboard shortcut: Ctrl/Cmd + Enter. Review and smoke-test the policy before launch. Unit smoke tests guard the API proxy’s allowlist and request handling; production browser verification is performed separately.
+## Workspaces
 
-## Verified facts in AI conversations
+- **Vue d’ensemble**: triage headline from `/fleets`, fleet RUL map (every engine on one RUL axis),
+  cross-fleet inspection queue, model reliability per fleet (RMSE, measured coverage of the 80 %
+  interval against its target).
+- **Santé moteur**: fleet, status, search and sort filters kept in the URL; diagnosis with observed /
+  predicted / recommendation readouts, prediction history with interval and thresholds, key
+  condition-normalised sensors; CSV exports of the list and of an engine history.
+- **Copilote**: questions to `POST /ask` for a chosen engine, contextual starter questions,
+  cancellation, per-tab history (sessionStorage, never sent anywhere). Each answer is split into
+  1. structured RUL facts from the API (cycles flown vs cycles remaining, interval, confidence),
+  2. the policy decision and any human-review requirement,
+  3. the generated explanation, labelled with the model id, and the fallback reason when the API
+     answered without a language model. A consistency check flags an answer about another engine.
+  The backend keeps no conversation memory; the interface says so.
+- **Traçabilité**: `GET /audit` (MCP tool calls seen by the policy gateway on the answering Lambda
+  instance, in memory, not durable) and the copilot decisions of the current tab.
 
-The first section of each Copilot reply displays the structured `engine` object returned by the trusted FastAPI `/ask` response, separately from the language model's free-form text. Explicitly distinguish `engine.rul` (remaining cycles) from `engine.cycles_flown` (already flown cycles). A warning reminds users that the generated interpretation can still be wrong, particularly near status thresholds. Model name, latency and an actual fallback reason (if any) appear before the explanation; a generic banner is not proof of a fallback. An `allow` policy decision permits producing the **recommendation**, not operating the aircraft.
+## Security
+
+The gateway (`api/proxy.js`):
+
+- reads the upstream origin and the optional access code from server-side variables only
+  (`AEROMRO_API_BASE_URL`, `AEROMRO_DEMO_ACCESS_CODE`); the code is sent only on `POST /ask`;
+- allows six routes with their methods and query parameters, refuses anything else (403/400/405),
+  never follows redirects (no SSRF pivot), refuses cross-site requests and requires a same-origin
+  `Origin` and a JSON content type on POST;
+- rebuilds the `/ask` body from validated fields (fleet, unit, 3–500 character question, control and
+  bidirectional-override characters removed) and rate limits it per client and instance;
+- size-caps and JSON-validates upstream answers, reduces error bodies to a short sanitised message,
+  and caches fleet data at the edge for 60 s (never health, audit or answers).
+
+`vercel.json` sets a strict Content-Security-Policy (`script-src 'self'`, `connect-src 'self'`,
+self-hosted fonts and images), HSTS, `X-Frame-Options: DENY`, COOP and a restrictive
+Permissions-Policy. LLM text is rendered as text, never as HTML.
+
+## Run locally
+
+```bash
+npm ci
+npm run dev                     # Vite on :5173, /api/proxy served by the same function
+```
+
+The proxy targets the public AWS API by default. To run against a local FastAPI instead:
+
+```bash
+python -m aeromro.data.smoke --data-dir /tmp/cmapss/data --models-dir /tmp/cmapss/models
+AEROMRO_DATA_DIR=/tmp/cmapss/data AEROMRO_MODELS_DIR=/tmp/cmapss/models AEROMRO_LLM_PROVIDER=mock \
+  uvicorn aeromro.api.app:app --port 8000
+npm run build && AEROMRO_API_BASE_URL=http://127.0.0.1:8000 npm run preview   # :4173
+```
+
+## Checks
+
+```bash
+npm run lint          # ESLint (TypeScript, React hooks, jsx-a11y)
+npm run typecheck     # tsc strict
+npm test              # Vitest: formatting, contracts, API client, copilot store, components
+npm run test:proxy    # gateway security tests (node:test)
+npm run build
+BASE_URL=http://127.0.0.1:4173 npm run test:e2e   # Chromium journey + axe-core WCAG 2.2 AA
+```
+
+The `AeroMRO UI` workflow runs all of these on every pull request; its end-to-end job serves the
+build with the real gateway against the deployed AWS API, so the copilot is tested with Amazon
+Bedrock (or its declared fallback). It can also be started by hand against any deployed URL.
+
+## Deployment (Vercel)
+
+`vercel.json` pins the framework (Vite), install (`npm ci`), build (`npm run build`) and output
+(`dist`) commands, the SPA rewrite and the headers. Server-side variables:
+
+- `AEROMRO_API_BASE_URL` — HTTPS base URL of the Lambda function (defaults to the public API);
+- `AEROMRO_DEMO_ACCESS_CODE` — only if `POST /ask` requires an access code. Never prefix it with
+  `VITE_` or `NEXT_PUBLIC_`.
+
+Rollback: promote the previous deployment in Vercel, or revert the merge commit.
+
+## Photographs
+
+NASA Image and Video Library, illustrative only (they are not the simulated engines and imply no
+NASA endorsement). Built by `scripts/build-images.mjs` from `scripts/images.manifest.json`, which
+keeps the photographer and centre credits shown in the interface (“Sources et limites”):
+
+- LRC-2026-OCIO_P-02363, Boeing 777 in a Langley hangar (NASA / Ryan Hill);
+- GRC-2014-C-04835, technicians at a turbofan on a test stand (NASA Glenn);
+- GRC-2025-C-07467 and GRC-2025-C-07466, engine test control room (NASA / Quentin Schwinn).
+
+## Limits
+
+- Data are simulated (NASA C-MAPSS). Research and decision-support prototype, not certified.
+- `/audit` is per Lambda instance and in memory; copilot history lives in the browser tab only.
+- The API's own `/ask` rate limit sees the gateway's address, so it is shared by all users of an
+  instance; the gateway adds a per-client limit in front of it.
+- The offline summary used in fallback mode is written in English by the API.

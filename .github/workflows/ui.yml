@@ -1,57 +1,110 @@
 name: AeroMRO UI
+
 on:
   pull_request:
     paths:
       - index.html
-      - styles.css
-      - premium.css
-      - mission.css
-      - app.js
-      - premium.js
-      - tests/frontend-contract.test.mjs
-      - tests/ui-smoke.test.mjs
+      - ui/**
+      - public/**
       - api/**
-      - vercel.json
+      - e2e/**
+      - scripts/serve.mjs
+      - scripts/vercel-adapter.mjs
+      - tests/proxy.test.mjs
       - package.json
+      - package-lock.json
+      - vite.config.ts
+      - vitest.config.ts
+      - tsconfig*.json
+      - eslint.config.js
+      - vercel.json
       - .github/workflows/ui.yml
   push:
     branches: [main]
     paths:
       - index.html
-      - styles.css
-      - premium.css
-      - mission.css
-      - app.js
-      - premium.js
-      - tests/frontend-contract.test.mjs
-      - tests/ui-smoke.test.mjs
+      - ui/**
+      - public/**
       - api/**
-      - vercel.json
       - package.json
+      - package-lock.json
+      - vercel.json
       - .github/workflows/ui.yml
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Deployed URL to test (empty: build and serve this commit against the AWS API)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
+concurrency:
+  group: ui-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  static-ui:
+  checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Syntax check
-        run: npm run test:ui
-      - name: Verify entrypoint and API gateway
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit and component tests
+        run: npm test
+      - name: Gateway security tests
+        run: npm run test:proxy
+      - name: Production build
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 3
+
+  e2e:
+    # Real browser, real gateway, real AWS API (Bedrock or its declared fallback). No mocks.
+    needs: checks
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AEROMRO_DEMO_ACCESS_CODE: ${{ secrets.AEROMRO_DEMO_ACCESS_CODE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright-core install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        if: inputs.base_url == ''
+        with:
+          name: dist
+          path: dist
+      - name: Serve the build with the gateway (AWS API)
+        if: inputs.base_url == ''
         run: |
-          test -f index.html
-          test -f styles.css
-          test -f app.js
-          test -f api/proxy.js
-          grep -q 'data-section="overview"' index.html
-          grep -q 'data-section="fleet"' index.html
-          grep -q 'data-section="assistant"' index.html
-          grep -q 'data-section="audit"' index.html
-          grep -q 'NASA C-MAPSS' index.html
-          grep -q 'AEROMRO_API_BASE_URL' api/proxy.js
+          PORT=4173 node scripts/serve.mjs > serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS "http://127.0.0.1:4173/api/proxy?path=%2Fhealth" && break || sleep 1; done
+      - name: Browser journey
+        env:
+          BASE_URL: ${{ inputs.base_url || 'http://127.0.0.1:4173' }}
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-artifacts
+          path: e2e/artifacts
+          retention-days: 7

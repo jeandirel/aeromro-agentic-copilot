@@ -1,6 +1,6 @@
 {
   "outputDir": "public/images",
-  "metadataFile": "src/content/images.generated.json",
+  "metadataFile": "ui/content/images.generated.json",
   "widths": [480, 960, 1440],
   "formats": ["avif", "webp"],
   "images": [

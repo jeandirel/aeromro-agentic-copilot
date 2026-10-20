@@ -12,7 +12,7 @@
  *
  * Output:
  *   public/images/<slug>-<width>.avif|webp   responsive variants
- *   src/content/images.generated.json        dimensions, variants, blur placeholder and credits
+ *   ui/content/images.generated.json        dimensions, variants, blur placeholder and credits
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -22,7 +22,7 @@ import sharp from "sharp";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(await readFile(path.join(root, "scripts/images.manifest.json"), "utf8"));
 const outDir = path.join(root, manifest.outputDir ?? "public/images");
-const metaFile = path.join(root, manifest.metadataFile ?? "src/content/images.generated.json");
+const metaFile = path.join(root, manifest.metadataFile ?? "ui/content/images.generated.json");
 await mkdir(outDir, { recursive: true });
 await mkdir(path.dirname(metaFile), { recursive: true });
 
