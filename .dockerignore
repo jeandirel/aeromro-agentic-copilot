@@ -16,3 +16,8 @@ infra
 data/raw/CMAPSSData/train_*
 data/raw/CMAPSSData/RUL_*
 data/raw/CMAPSSData/readme.txt
+node_modules
+dist
+public
+ui
+e2e

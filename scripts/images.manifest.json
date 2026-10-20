@@ -1,0 +1,21 @@
+{
+  "outputDir": "public/images",
+  "metadataFile": "ui/content/images.generated.json",
+  "widths": [480, 960, 1440],
+  "formats": ["avif", "webp"],
+  "images": [
+    {
+      "slug": "hangar-b777",
+      "nasaId": "LRC-2026-OCIO_P-02363",
+      "widths": [640, 1024, 1600, 2400],
+      "crop": { "left": 0, "top": 0.06, "width": 1, "height": 0.82 }
+    },
+    {
+      "slug": "turbofan-inspection",
+      "nasaId": "GRC-2014-C-04835",
+      "crop": { "left": 0.053, "top": 0.128, "width": 0.894, "height": 0.744 }
+    },
+    { "slug": "engine-test-control", "nasaId": "GRC-2025-C-07467" },
+    { "slug": "engine-test-consoles", "nasaId": "GRC-2025-C-07466" }
+  ]
+}

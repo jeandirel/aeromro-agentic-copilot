@@ -1,0 +1,218 @@
+{
+  "hangar-b777": {
+    "nasaId": "LRC-2026-OCIO_P-02363",
+    "width": 8256,
+    "height": 4513,
+    "variants": [
+      {
+        "file": "hangar-b777-640.avif",
+        "width": 640,
+        "format": "avif",
+        "bytes": 21570
+      },
+      {
+        "file": "hangar-b777-640.webp",
+        "width": 640,
+        "format": "webp",
+        "bytes": 32694
+      },
+      {
+        "file": "hangar-b777-1024.avif",
+        "width": 1024,
+        "format": "avif",
+        "bytes": 47636
+      },
+      {
+        "file": "hangar-b777-1024.webp",
+        "width": 1024,
+        "format": "webp",
+        "bytes": 72186
+      },
+      {
+        "file": "hangar-b777-1600.avif",
+        "width": 1600,
+        "format": "avif",
+        "bytes": 100514
+      },
+      {
+        "file": "hangar-b777-1600.webp",
+        "width": 1600,
+        "format": "webp",
+        "bytes": 153482
+      },
+      {
+        "file": "hangar-b777-2400.avif",
+        "width": 2400,
+        "format": "avif",
+        "bytes": 202917
+      },
+      {
+        "file": "hangar-b777-2400.webp",
+        "width": 2400,
+        "format": "webp",
+        "bytes": 312196
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAADQAwCdASoYAA0APu1yrU+pp6QiMAgBMB2JZwDImCHZdiENyc+aQoAA/u6Q1tGzfjIYf8seP9/5DUT3++i6BBO06ZYAdASouAA=",
+    "credit": {
+      "title": "NASA's B777 Sports New Paint Job",
+      "photographer": "NASA Ryan Hill",
+      "center": "LaRC",
+      "dateCreated": "2026-07-15T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-02363"
+    }
+  },
+  "turbofan-inspection": {
+    "nasaId": "GRC-2014-C-04835",
+    "width": 4917,
+    "height": 3274,
+    "variants": [
+      {
+        "file": "turbofan-inspection-480.avif",
+        "width": 480,
+        "format": "avif",
+        "bytes": 21243
+      },
+      {
+        "file": "turbofan-inspection-480.webp",
+        "width": 480,
+        "format": "webp",
+        "bytes": 32118
+      },
+      {
+        "file": "turbofan-inspection-960.avif",
+        "width": 960,
+        "format": "avif",
+        "bytes": 71775
+      },
+      {
+        "file": "turbofan-inspection-960.webp",
+        "width": 960,
+        "format": "webp",
+        "bytes": 111466
+      },
+      {
+        "file": "turbofan-inspection-1440.avif",
+        "width": 1440,
+        "format": "avif",
+        "bytes": 140599
+      },
+      {
+        "file": "turbofan-inspection-1440.webp",
+        "width": 1440,
+        "format": "webp",
+        "bytes": 219648
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAACwAwCdASoYABAAPu1kqU4ppaOiMAgBMB2JbAC2yB57XQiuIAD++AD+7EPlakTojnfKecmexT2zanVYXFaTQNZPRYXPdyNMeJIVvv/ozODeb4X0mfw9+8h2AAA=",
+    "credit": {
+      "title": "GRC-2014-C-04835",
+      "photographer": null,
+      "center": "GRC",
+      "dateCreated": "2010-08-12T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2014-C-04835"
+    }
+  },
+  "engine-test-control": {
+    "nasaId": "GRC-2025-C-07467",
+    "width": 6000,
+    "height": 3435,
+    "variants": [
+      {
+        "file": "engine-test-control-480.avif",
+        "width": 480,
+        "format": "avif",
+        "bytes": 15962
+      },
+      {
+        "file": "engine-test-control-480.webp",
+        "width": 480,
+        "format": "webp",
+        "bytes": 22534
+      },
+      {
+        "file": "engine-test-control-960.avif",
+        "width": 960,
+        "format": "avif",
+        "bytes": 49884
+      },
+      {
+        "file": "engine-test-control-960.webp",
+        "width": 960,
+        "format": "webp",
+        "bytes": 73552
+      },
+      {
+        "file": "engine-test-control-1440.avif",
+        "width": 1440,
+        "format": "avif",
+        "bytes": 98905
+      },
+      {
+        "file": "engine-test-control-1440.webp",
+        "width": 1440,
+        "format": "webp",
+        "bytes": 148644
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAADQAwCdASoYAA4APu1qrU8ppiQiMAgBMB2JZwDE2B5moUrCARM5CHQA/tnxdPJP4pKTyCRB45ZA1bCUTQ2bwqVteU6aSl7e8hjmWAAA",
+    "credit": {
+      "title": "GRC-2025-C-07467",
+      "photographer": "Quentin Schwinn",
+      "center": "GRC",
+      "dateCreated": "2025-09-02T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2025-C-07467"
+    }
+  },
+  "engine-test-consoles": {
+    "nasaId": "GRC-2025-C-07466",
+    "width": 6000,
+    "height": 4000,
+    "variants": [
+      {
+        "file": "engine-test-consoles-480.avif",
+        "width": 480,
+        "format": "avif",
+        "bytes": 18955
+      },
+      {
+        "file": "engine-test-consoles-480.webp",
+        "width": 480,
+        "format": "webp",
+        "bytes": 26032
+      },
+      {
+        "file": "engine-test-consoles-960.avif",
+        "width": 960,
+        "format": "avif",
+        "bytes": 60180
+      },
+      {
+        "file": "engine-test-consoles-960.webp",
+        "width": 960,
+        "format": "webp",
+        "bytes": 83640
+      },
+      {
+        "file": "engine-test-consoles-1440.avif",
+        "width": 1440,
+        "format": "avif",
+        "bytes": 117847
+      },
+      {
+        "file": "engine-test-consoles-1440.webp",
+        "width": 1440,
+        "format": "webp",
+        "bytes": 166558
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoYABAAPu1iqU2ppaOiMAgBMB2JZwDE2CFsdTm8ZHZSAAD+7Ju21u5eh4bmLxeZbZfGRH6u3aRJp2AY/UAhJvsgAAA=",
+    "credit": {
+      "title": "GRC-2025-C-07466",
+      "photographer": "Quentin Schwinn",
+      "center": "GRC",
+      "dateCreated": "2025-09-02T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2025-C-07466"
+    }
+  }
+}

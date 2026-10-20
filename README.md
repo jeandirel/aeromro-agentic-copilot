@@ -201,7 +201,10 @@ src/aeromro/
   fleet.py           in-service fleet: RUL, interval, status and confidence per engine
   data/              NASA C-MAPSS loader, RUL labels, verified download
   rul/               features, RUL model with interval, metrics, training and evaluation
-tests/               unit tests (no network, no AWS account needed)
+tests/               unit tests (no network, no AWS account needed), gateway security tests
+ui/                  operations console: React 19 + TypeScript, Vite, Tailwind CSS (see FRONTEND.md)
+api/proxy.js         Vercel gateway: allowlisted same-origin proxy to the AWS API
+e2e/                 browser journey (Chromium) and screenshots against a running build
 infra/               CloudFormation: account bootstrap and application stack
 docs/                architecture, deployment, data sources, model card, decision records
 reports/             evaluation results (JSON)
