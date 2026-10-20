@@ -92,6 +92,18 @@ await step("Dashboard", async () => {
   await axe(page, "dashboard");
 });
 
+await step("Deep links", async () => {
+  // Every client route must be served by the SPA rewrite, including on a cold load.
+  for (const path of ["/engines", "/engines/FD001/1", "/copilot?fleet=FD002&engine=1", "/audit"]) {
+    const response = await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
+    const status = response?.status() ?? 0;
+    const app = await page.locator("#root").count();
+    check(`Deep link ${path}: served by the app`, status === 200 && app === 1, `HTTP ${status}, final URL ${page.url().replace(base, "")}`);
+  }
+  await page.goto(`${base}/`, { waitUntil: "domcontentloaded" });
+  await page.locator("#hero-title").filter({ hasText: /moteur/ }).waitFor();
+});
+
 let engineUrl = "";
 await step("Engines", async () => {
   await page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Santé moteur" }).click();

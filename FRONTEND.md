@@ -123,7 +123,7 @@ Bedrock (or its declared fallback). It can also be started by hand against any d
 ## Deployment (Vercel)
 
 `vercel.json` pins the framework (Vite), install (`npm ci`), build (`npm run build`) and output
-(`dist`) commands, the SPA rewrite and the headers. Server-side variables:
+(`dist`) commands, the SPA rewrite (Vercel serves existing files and the `/api` function first) and the headers. Server-side variables:
 
 - `AEROMRO_API_BASE_URL` — HTTPS base URL of the Lambda function (defaults to the public API);
 - `AEROMRO_DEMO_ACCESS_CODE` — only if `POST /ask` requires an access code. Never prefix it with
