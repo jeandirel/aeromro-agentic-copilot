@@ -9,6 +9,7 @@ import { Readout } from "@/components/instruments/provenance";
 import { RulTape } from "@/components/instruments/rul-tape";
 import { DecisionBadge, StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GeneratedText, stripMarks } from "@/components/ui/generated-text";
 import { Tip } from "@/components/ui/primitives";
 
 const FACTS_ONLY_PREFIX = "[summary without language model]";
@@ -129,13 +130,9 @@ export function AnswerCard({ entry, thresholds, max }: { entry: AnswerEntry; thr
       <section aria-label="Explication générée" className="px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-ink">{factsOnly ? "Résumé automatique des faits" : "Explication générée"}</h3>
-          <CopyButton text={answerText} />
+          <CopyButton text={stripMarks(answerText)} />
         </div>
-        <div className="mt-2 max-w-[72ch] space-y-2 whitespace-pre-line text-[0.95rem] leading-relaxed text-ink">
-          {answerText.split(/\n{2,}/).map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
-        </div>
+        <GeneratedText text={answerText} className="mt-2 max-w-[72ch] space-y-2 text-[0.95rem] leading-relaxed text-ink" />
         <p className="mt-3 text-xs text-ink-3">
           {factsOnly
             ? "Texte assemblé par l’API à partir des faits ci-dessus, sans modèle de langage."

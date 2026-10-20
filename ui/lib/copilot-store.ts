@@ -101,8 +101,9 @@ export interface Conversation {
 
 export function conversationsOf(list: CopilotEntry[]): Conversation[] {
   const map = new Map<string, Conversation>();
-  for (const e of list) {
-    if (e.kind !== "question") continue;
+  const order = new Map<string, number>();
+  list.forEach((e, index) => {
+    if (e.kind !== "question") return;
     const key = `${e.subset}:${e.unit}`;
     const current = map.get(key);
     map.set(key, {
@@ -113,6 +114,8 @@ export function conversationsOf(list: CopilotEntry[]): Conversation[] {
       lastQuestion: e.question,
       questions: (current?.questions ?? 0) + 1,
     });
-  }
-  return [...map.values()].sort((a, b) => b.lastAt - a.lastAt);
+    order.set(key, index);
+  });
+  // Most recent first; entries created in the same millisecond keep their insertion order.
+  return [...map.values()].sort((a, b) => b.lastAt - a.lastAt || order.get(b.key)! - order.get(a.key)!);
 }

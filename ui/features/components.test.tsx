@@ -162,3 +162,14 @@ describe("CopilotPage", () => {
     expect(screen.queryByRole("article", { name: /Réponse du copilote/ })).not.toBeInTheDocument();
   });
 });
+
+describe("GeneratedText", () => {
+  it("renders bold and lists and never interprets HTML from the model", async () => {
+    const { GeneratedText } = await import("@/components/ui/generated-text");
+    const { container } = render(<GeneratedText text={"Il reste **15 cycles**.\n- point <img src=x onerror=alert(1)>\n- second"} />);
+    expect(container.querySelector("strong")).toHaveTextContent("15 cycles");
+    expect(container.querySelectorAll("li")).toHaveLength(2);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container).toHaveTextContent("<img src=x onerror=alert(1)>");
+  });
+});

@@ -119,3 +119,12 @@ describe("copilot session store", () => {
     expect(copilotStore.snapshot()).toHaveLength(0);
   });
 });
+
+describe("generated text rendering", () => {
+  it("understands the Markdown marks models emit, as text only", async () => {
+    const { parseBlocks, stripMarks } = await import("@/components/ui/generated-text");
+    const blocks = parseBlocks("Ce moteur a parcouru **166 cycles**.\n\n- RUL : 15 cycles\n- Intervalle : 8,9 à 21\n\n1. Inspecter\n2. Valider");
+    expect(blocks.map((b) => b.kind)).toEqual(["p", "ul", "ol"]);
+    expect(stripMarks("a **b** c")).toBe("a b c");
+  });
+});

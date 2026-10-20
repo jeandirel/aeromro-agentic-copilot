@@ -98,6 +98,12 @@ await step("Engines", async () => {
   await page.waitForURL(/\/engines/);
   await page.getByRole("button", { name: /À planifier/ }).first().click();
   await page.waitForURL(/status=plan_inspection/);
+  await page
+    .waitForFunction(() => {
+      const cells = [...document.querySelectorAll("section[aria-label='Liste des moteurs'] tbody tr td:nth-child(2)")];
+      return cells.length > 0 && cells.every((c) => c.textContent.includes("À planifier"));
+    }, null, { timeout: 8000 })
+    .catch(() => {});
   const statuses = await page.locator("section[aria-label='Liste des moteurs'] tbody tr td:nth-child(2)").allInnerTexts();
   check("Engines: status filter keeps only matching engines", statuses.length > 0 && statuses.every((s) => s.includes("À planifier")), `${statuses.length} rows`);
   await page.getByRole("button", { name: "Réinitialiser" }).click();
