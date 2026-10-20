@@ -8,7 +8,7 @@ export type Tone = "warn" | "caution" | "normal" | "policy" | "neutral";
 
 export const STATUS_META: Record<EngineStatus, { label: string; short: string; tone: Tone; rank: number; action: string }> = {
   inspect_now: {
-    label: "Inspection avant le prochain vol",
+    label: "Inspection immédiate",
     short: "Inspection immédiate",
     tone: "warn",
     rank: 0,
@@ -22,7 +22,7 @@ export const STATUS_META: Record<EngineStatus, { label: string; short: string; t
     action: "Planifier une inspection à la prochaine opportunité de maintenance",
   },
   healthy: {
-    label: "Surveillance normale",
+    label: "Nominal, surveillance normale",
     short: "Nominal",
     tone: "normal",
     rank: 2,

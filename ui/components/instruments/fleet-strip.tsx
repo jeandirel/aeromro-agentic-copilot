@@ -24,6 +24,14 @@ const DOT_COLOR = {
   healthy: "var(--normal-fill)",
 } as const;
 
+/** Same shapes as the status marks everywhere else (square, triangle, circle), so the map reads without colour. */
+function EngineMark({ status, cx, cy }: { status: Engine["status"]; cx: number; cy: number }) {
+  const fill = DOT_COLOR[status];
+  if (status === "inspect_now") return <rect data-engine="" x={cx - 3} y={cy - 3} width={6} height={6} rx={0.8} fill={fill} opacity={0.95} />;
+  if (status === "plan_inspection") return <path data-engine="" d={`M${cx} ${cy - 3.6}L${cx + 3.6} ${cy + 2.8}H${cx - 3.6}Z`} fill={fill} opacity={0.95} />;
+  return <circle data-engine="" cx={cx} cy={cy} r={2.6} fill={fill} opacity={0.72} />;
+}
+
 interface Hover {
   engine: Engine;
   x: number;
@@ -148,7 +156,7 @@ export function FleetStrip({ fleets, lists, max }: { fleets: FleetSummary[]; lis
                   </>
                 )}
                 {points[row]?.map((p) => (
-                  <circle key={p.e.unit} cx={p.cx} cy={p.cy} r={p.e.status === "healthy" ? 2.6 : 3.2} fill={DOT_COLOR[p.e.status]} opacity={p.e.status === "healthy" ? 0.72 : 0.95} />
+                  <EngineMark key={p.e.unit} status={p.e.status} cx={p.cx} cy={p.cy} />
                 ))}
               </g>
             );

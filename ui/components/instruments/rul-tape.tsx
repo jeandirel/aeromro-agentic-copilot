@@ -1,4 +1,5 @@
 import type { Thresholds } from "@/lib/api/schemas";
+import { STATUS_META } from "@/lib/domain";
 import { cycles, interval } from "@/lib/format";
 import { clamp, cn } from "@/lib/utils";
 
@@ -30,9 +31,9 @@ export function rulAriaLabel(rul: number, low: number, high: number, t: Threshol
 export function RulTape({ rul, low, high, thresholds, max, size = "sm", className }: RulTapeProps) {
   const pct = (v: number) => clamp(v / max, 0, 1) * 100;
   const zones = [
-    { key: "warn", from: 0, to: thresholds.inspect_now, label: "Inspection" },
-    { key: "caution", from: thresholds.inspect_now, to: thresholds.plan_inspection, label: "À planifier" },
-    { key: "normal", from: thresholds.plan_inspection, to: max, label: "Nominal" },
+    { key: "warn", from: 0, to: thresholds.inspect_now, label: STATUS_META.inspect_now.short },
+    { key: "caution", from: thresholds.inspect_now, to: thresholds.plan_inspection, label: STATUS_META.plan_inspection.short },
+    { key: "normal", from: thresholds.plan_inspection, to: max, label: STATUS_META.healthy.short },
   ] as const;
   const beyond = rul > max;
   const track = size === "lg" ? "h-3.5" : size === "md" ? "h-2.5" : "h-1.5";

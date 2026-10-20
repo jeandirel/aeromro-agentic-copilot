@@ -39,10 +39,10 @@ function CopyButton({ text }: { text: string }) {
 }
 
 /**
- * One answer from POST /ask, in three clearly separated layers:
- * 1. structured facts from the RUL model (trusted numbers, not generated text),
- * 2. the policy decision of the harness,
- * 3. the language model's explanation, labelled as generated and fallible.
+ * One answer from POST /ask, in three clearly separated layers, read in the order a person needs:
+ * 1. the language model's explanation (the answer to the question), labelled as generated and fallible,
+ * 2. the policy decision of the harness (with a banner on top when human approval is required),
+ * 3. the structured facts from the RUL model it rests on (trusted numbers, not generated text).
  */
 export function AnswerCard({ entry, thresholds, max }: { entry: AnswerEntry; thresholds: Thresholds | undefined; max: number }) {
   const { response } = entry;
@@ -84,23 +84,26 @@ export function AnswerCard({ entry, thresholds, max }: { entry: AnswerEntry; thr
         </div>
       )}
 
-      {/* 1. Structured facts */}
-      <section aria-label="Faits du modèle RUL" className="border-b border-line px-4 py-4 sm:px-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-ink">Faits du modèle RUL</h3>
-          <span className="text-xs text-ink-3">Valeurs structurées de l’API, non générées</span>
+      {response.requires_approval && (
+        <div className="flex items-center gap-2.5 border-b border-line bg-caution-soft px-4 py-2.5 text-sm font-semibold text-ink sm:px-5">
+          <UserCheck aria-hidden="true" className="size-4 shrink-0 text-caution" />
+          Validation humaine requise avant toute action.
         </div>
-        {thresholds && <RulTape className="mt-2" size="md" rul={e.rul} low={e.rul_low} high={e.rul_high} thresholds={thresholds} max={max} />}
-        <dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
-          <Readout size="sm" label="Cycles parcourus" value={int(e.cycles_flown)} provenance="observed" hint="Déjà effectués" />
-          <Readout size="sm" label="Cycles restants (RUL)" value={cycles(e.rul)} provenance="predicted" hint="Estimation" />
-          <Readout size="sm" label="Intervalle à 80 %" value={interval(e.rul_low, e.rul_high)} provenance="predicted" />
-          <Readout size="sm" label="Confiance du statut" value={percent(e.confidence)} provenance="predicted" />
-        </dl>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-2">
-          <StatusBadge status={e.status} short={false} />
-          <span>{STATUS_META[e.status].action}. Statut calculé sur les cycles restants, pas sur les cycles parcourus.</span>
+      )}
+
+      {/* 1. The answer to the question, first */}
+      <section aria-label="Explication générée" className="border-b border-line px-4 py-4 sm:px-5">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-ink">{factsOnly ? "Résumé automatique des faits" : "Explication générée"}</h3>
+          <CopyButton text={stripMarks(answerText)} />
         </div>
+        <GeneratedText text={answerText} className="mt-2 max-w-[72ch] space-y-2 text-[0.95rem] leading-relaxed text-ink" />
+        <p className="mt-3 text-xs text-ink-3">
+          {factsOnly
+            ? "Texte assemblé par l’API à partir des faits ci-dessus, sans modèle de langage."
+            : "Texte produit par un modèle de langage à partir des faits ci-dessus : il peut contenir des erreurs d’interprétation, surtout près des seuils."}{" "}
+          Ne constitue pas une certification de navigabilité.
+        </p>
       </section>
 
       {/* 2. Policy decision */}
@@ -126,19 +129,23 @@ export function AnswerCard({ entry, thresholds, max }: { entry: AnswerEntry; thr
         </div>
       </section>
 
-      {/* 3. Generated explanation */}
-      <section aria-label="Explication générée" className="px-4 py-4 sm:px-5">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-ink">{factsOnly ? "Résumé automatique des faits" : "Explication générée"}</h3>
-          <CopyButton text={stripMarks(answerText)} />
+      {/* 3. Structured facts the answer rests on */}
+      <section aria-label="Faits du modèle RUL" className="bg-surface-2/60 px-4 py-4 sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-ink">Faits du modèle RUL</h3>
+          <span className="text-xs text-ink-3">Valeurs structurées de l’API, non générées</span>
         </div>
-        <GeneratedText text={answerText} className="mt-2 max-w-[72ch] space-y-2 text-[0.95rem] leading-relaxed text-ink" />
-        <p className="mt-3 text-xs text-ink-3">
-          {factsOnly
-            ? "Texte assemblé par l’API à partir des faits ci-dessus, sans modèle de langage."
-            : "Texte produit par un modèle de langage à partir des faits ci-dessus : il peut contenir des erreurs d’interprétation, surtout près des seuils."}{" "}
-          Ne constitue pas une certification de navigabilité.
-        </p>
+        {thresholds && <RulTape className="mt-2" size="md" rul={e.rul} low={e.rul_low} high={e.rul_high} thresholds={thresholds} max={max} />}
+        <dl className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
+          <Readout size="sm" label="Cycles parcourus" value={int(e.cycles_flown)} provenance="observed" hint="Déjà effectués" />
+          <Readout size="sm" label="Cycles restants (RUL)" value={cycles(e.rul)} provenance="predicted" hint="Estimation" />
+          <Readout size="sm" label="Intervalle à 80 %" value={interval(e.rul_low, e.rul_high)} provenance="predicted" />
+          <Readout size="sm" label="Confiance du statut" value={percent(e.confidence)} provenance="predicted" />
+        </dl>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-2">
+          <StatusBadge status={e.status} short={false} />
+          <span>{STATUS_META[e.status].action}. Statut calculé sur les cycles restants, pas sur les cycles parcourus.</span>
+        </div>
       </section>
 
       <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-xs text-ink-3 sm:px-5">

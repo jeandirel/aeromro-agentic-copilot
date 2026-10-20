@@ -75,6 +75,9 @@ describe("AnswerCard", () => {
     expect(within(text).getByText(/Ne constitue pas une certification de navigabilité/)).toBeInTheDocument();
     expect(screen.getByText("eu.amazon.nova-2-lite-v1:0")).toBeInTheDocument();
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
+    // The answer is read first, then the policy decision, then the facts it rests on.
+    expect(text.compareDocumentPosition(policy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(policy.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("makes human review and fallback mode explicit", () => {

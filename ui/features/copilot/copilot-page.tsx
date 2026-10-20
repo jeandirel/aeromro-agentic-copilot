@@ -104,8 +104,22 @@ export default function CopilotPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx.engine, engines]);
 
+  // While waiting, follow the end of the thread; once the answer is in, bring its question to the top
+  // so the answer is read from its first line (on phones the composer would otherwise cover it).
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "end" });
+    const behavior = reducedMotion ? "auto" : "smooth";
+    const last = thread[thread.length - 1];
+    if (!last) return;
+    if (last.kind === "question" || pending) {
+      endRef.current?.scrollIntoView({ behavior, block: "end" });
+      return;
+    }
+    const question = [...thread].reverse().find((e) => e.kind === "question");
+    const target = question ? document.getElementById(`q-${question.id}`) : null;
+    // Next frame: the answer card has been laid out, so the position is final.
+    const frame = requestAnimationFrame(() => (target ?? endRef.current)?.scrollIntoView({ behavior, block: "start" }));
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.length, pending, reducedMotion]);
 
   useEffect(() => () => controller.current?.abort(), []);
@@ -171,9 +185,9 @@ export default function CopilotPage() {
   const credit = photoCredit("engine-test-control");
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start xl:grid-cols-[22rem_minmax(0,1fr)] xl:gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start xl:grid-cols-[22rem_minmax(0,1fr)] xl:gap-6">
       {/* Context */}
-      <aside aria-label="Contexte de l’analyse" className="space-y-4 lg:sticky lg:top-24">
+      <aside aria-label="Contexte de l’analyse" className="min-w-0 space-y-4 lg:sticky lg:top-24">
         <div>
           <h1 className="text-2xl font-semibold sm:text-3xl">Copilote</h1>
           <p className="mt-1 text-sm text-ink-2">Questions en langage naturel sur un moteur, réponses de l’API AWS fondées sur les faits du modèle RUL et soumises à la politique de sécurité.</p>
@@ -325,7 +339,7 @@ export default function CopilotPage() {
           {thread.map((entry: CopilotEntry) => {
             if (entry.kind === "question") {
               return (
-                <div key={entry.id} className="flex justify-end">
+                <div key={entry.id} id={`q-${entry.id}`} className="flex scroll-mt-24 justify-end lg:scroll-mt-3">
                   <p className="max-w-[85%] whitespace-pre-line rounded-lg rounded-br-xs bg-ink px-4 py-2.5 text-[0.95rem] text-canvas">
                     <span className="sr-only">Votre question : </span>
                     {entry.question}
@@ -343,11 +357,11 @@ export default function CopilotPage() {
         <form
           onSubmit={onSubmit}
           // On phones the composer stays above the tab bar once a conversation exists; before that it follows the suggestions.
-          className={cn("border-t border-line bg-surface p-3 sm:p-4 lg:static", (thread.length > 0 || busyHere) && "sticky bottom-16")}
+          className={cn("border-t border-line bg-surface px-3 pb-2 pt-3 sm:p-4 lg:static", (thread.length > 0 || busyHere) && "sticky bottom-16")}
           aria-label="Poser une question"
         >
           {thread.length > 0 && !pending && (
-            <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-thin">
+            <div className="-mx-1 mb-2 hidden gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-thin sm:flex">
               {suggestions.slice(0, 3).map((s) => (
                 <button
                   key={s}
@@ -368,7 +382,7 @@ export default function CopilotPage() {
             <textarea
               ref={inputRef}
               id="question"
-              rows={2}
+              rows={1}
               maxLength={MAX_CHARS}
               value={draft}
               onChange={(e) => {
@@ -376,35 +390,40 @@ export default function CopilotPage() {
                 if (formError) setFormError(null);
               }}
               onKeyDown={onKeyDown}
-              placeholder={`Votre question sur le moteur ${unit ? unitLabel(unit) : ""} de ${ctx.fleet}`}
+              placeholder={`Votre question sur ${ctx.fleet} ${unit ? unitLabel(unit) : ""}`}
               aria-describedby="question-help"
               aria-invalid={formError ? true : undefined}
               disabled={!engine}
-              className="max-h-40 min-h-[3rem] flex-1 resize-none rounded-md border border-control/70 bg-surface px-3 py-2.5 text-[0.95rem] text-ink placeholder:text-ink-3 hover:border-ink-2 disabled:opacity-60 [field-sizing:content]"
+              className="max-h-40 min-h-11 min-w-0 flex-1 resize-none rounded-md border border-control/70 bg-surface px-3 py-2.5 text-[0.95rem] text-ink placeholder:text-ink-3 hover:border-ink-2 disabled:opacity-60 [field-sizing:content]"
             />
             {pending ? (
-              <Button type="button" variant="secondary" className="h-12" aria-label="Annuler la question" onClick={() => controller.current?.abort()}>
+              <Button type="button" variant="secondary" className="h-11 shrink-0" aria-label="Annuler la question" onClick={() => controller.current?.abort()}>
                 <CircleStop aria-hidden="true" />
                 <span className="hidden sm:inline">Annuler</span>
               </Button>
             ) : (
-              <Button type="submit" variant="primary" className="h-12" aria-label="Envoyer la question" disabled={!engine || draft.trim().length < 3}>
+              <Button type="submit" variant="primary" className="h-11 shrink-0" aria-label="Envoyer la question" disabled={!engine || draft.trim().length < 3}>
                 <SendHorizontal aria-hidden="true" />
                 <span className="hidden sm:inline">Envoyer</span>
               </Button>
             )}
           </div>
-          <div id="question-help" className="mt-1.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-ink-3">
+          <div id="question-help" className="mt-1.5 flex items-start justify-between gap-x-4 text-xs text-ink-3">
             {formError ? (
               <span className="text-warn" role="alert">
                 {formError}
               </span>
             ) : (
               <span>
-                Chaque question est traitée indépendamment, sans mémoire des précédentes. <Kbd>Entrée</Kbd> pour envoyer, <Kbd>Maj</Kbd> + <Kbd>Entrée</Kbd> pour aller à la ligne.
+                Sans mémoire des questions précédentes.
+                {/* Keyboard hints only where there is a keyboard. */}
+                <span className="hidden [@media(pointer:fine)]:inline">
+                  {" "}
+                  <Kbd>Entrée</Kbd> pour envoyer, <Kbd>Maj</Kbd> + <Kbd>Entrée</Kbd> pour aller à la ligne.
+                </span>
               </span>
             )}
-            <span className="readout">
+            <span className={cn("readout shrink-0", draft.length < MAX_CHARS * 0.8 && "sr-only")}>
               {draft.length}/{MAX_CHARS}
             </span>
           </div>

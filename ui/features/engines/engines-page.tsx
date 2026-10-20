@@ -91,7 +91,7 @@ export default function EnginesPage() {
         </Button>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start xl:gap-6">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-6">
         {/* List */}
         <section aria-label="Liste des moteurs" className={cn("min-w-0 rounded-lg border border-line bg-surface lg:sticky lg:top-24", selected && "hidden lg:block")}>
           <div className="space-y-3 border-b border-line p-4">
