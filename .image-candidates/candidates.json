@@ -1,0 +1,254 @@
+{
+  "b777-hangar-a": {
+    "nasaId": "LRC-2026-OCIO_P-02358",
+    "width": 8256,
+    "height": 5504,
+    "variants": [
+      {
+        "file": "b777-hangar-a-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 97968
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAACQAwCdASoYABAALrV2u12jqampiYC0SygABc4k55+9MmtEYlcAAP7w17NeGoGggUiI6nXsej7zi1xP+Tk57M2lZWDFoaETuwl7xeMp+vAAAA==",
+    "credit": {
+      "title": "777 Prior to Receiving NASA Livery",
+      "photographer": "NASA Ryan Hill",
+      "center": "LaRC",
+      "dateCreated": "2026-07-15T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-02358"
+    }
+  },
+  "b777-hangar-b": {
+    "nasaId": "LRC-2026-OCIO_P-02146",
+    "width": 7836,
+    "height": 5224,
+    "variants": [
+      {
+        "file": "b777-hangar-b-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 52174
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoYABAAPu1oqk6ppiQiMAgBMB2JQBkTBDuHOKcizMtamAD+3nAJI+WGJGNU4TuXI8OBkzAaUJgG8zjXwBwYx3yAAAA=",
+    "credit": {
+      "title": "NASA's B777 Sports New Paint Job",
+      "photographer": "NASA Mark Knopp",
+      "center": "LaRC",
+      "dateCreated": "2026-07-16T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-02146"
+    }
+  },
+  "b777-hangar-c": {
+    "nasaId": "LRC-2026-OCIO_P-02363",
+    "width": 8256,
+    "height": 5504,
+    "variants": [
+      {
+        "file": "b777-hangar-c-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 105088
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQBACdASoYABAAPu1krU2ppaSiMAgBMB2JZwDE2CHweePR/Q6mudWWAAD+6+BRS/n+48eQ8r8rGDyORFYDgb6akrEcuFyzwnHPT792AAA=",
+    "credit": {
+      "title": "NASA's B777 Sports New Paint Job",
+      "photographer": "NASA Ryan Hill",
+      "center": "LaRC",
+      "dateCreated": "2026-07-15T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-02363"
+    }
+  },
+  "b777-hangar-d": {
+    "nasaId": "LRC-2026-OCIO_P-02147",
+    "width": 4974,
+    "height": 3316,
+    "variants": [
+      {
+        "file": "b777-hangar-d-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 17444
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAADwAwCdASoYABAAPu1iqU2ppaOiMAgBMB2JZwDA3CHe70H9b0CRI1AAAP6u77W012x8piglEU3qHMfxihd2cSAA",
+    "credit": {
+      "title": "NASA's B777 Sports New Paint Job",
+      "photographer": "NASA Mark Knopp",
+      "center": "LaRC",
+      "dateCreated": "2026-07-16T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-02147"
+    }
+  },
+  "b777-hangar-e": {
+    "nasaId": "LRC-2026-OCIO_P-01032",
+    "width": 7865,
+    "height": 5243,
+    "variants": [
+      {
+        "file": "b777-hangar-e-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 90322
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAACwAwCdASoYABAAPu1kqU2ppaQiMAgBMB2JYwDKABwp/iaru14cWAD90nSCunAmYPWuJqXDq2HKrCcS4V5cdToLFKtv+5G+Xy/6BgKsDN+ruuBSgAA=",
+    "credit": {
+      "title": "NASA's B777 Sports New Paint Job",
+      "photographer": "NASA Mark Knopp",
+      "center": "LaRC",
+      "dateCreated": "2026-04-22T00:00:00Z",
+      "source": "https://images.nasa.gov/details/LRC-2026-OCIO_P-01032"
+    }
+  },
+  "turbofan-aapl-a": {
+    "nasaId": "GRC-2014-C-04835",
+    "width": 5500,
+    "height": 4400,
+    "variants": [
+      {
+        "file": "turbofan-aapl-a-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 135520
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADQBACdASoYABMAPu1srFCppiQiqAqpMB2JagDNwBEc/VeaY7I7/zexuj974MUZGgD+mxga3BgVETd3eKcC5bZdoaD/pVOX4mJXqynTuJ5bn/XgpLcLUwr5H9jz7mO18KHICkzHr/7zo+PCqtJjWggAAAA=",
+    "credit": {
+      "title": "GRC-2014-C-04835",
+      "photographer": null,
+      "center": "GRC",
+      "dateCreated": "2010-08-12T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2014-C-04835"
+    }
+  },
+  "turbofan-aapl-b": {
+    "nasaId": "GRC-2014-C-04830",
+    "width": 5500,
+    "height": 4400,
+    "variants": [
+      {
+        "file": "turbofan-aapl-b-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 151032
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAADwBACdASoYABMAPu1mqk+ppaOiMBgIATAdiUAYG4Id8Y72h1ZhOr3/3QxUBbiNyAAA/ra1zo5mbn1EH9sjxOPLBatouC0sgh6KYklXvmTSXwz/uuJT20xX/hoPR8MvH5nHF0Mbu6jQ6whRS8wpgAAA",
+    "credit": {
+      "title": "GRC-2014-C-04830",
+      "photographer": null,
+      "center": "GRC",
+      "dateCreated": "2010-08-12T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2014-C-04830"
+    }
+  },
+  "turbofan-aapl-c": {
+    "nasaId": "GRC-2014-C-04823",
+    "width": 5500,
+    "height": 4400,
+    "variants": [
+      {
+        "file": "turbofan-aapl-c-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 159742
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAADwBACdASoYABMAPu1mqk2ppaQiMAgBMB2JYgCw7CHfT6shDqJd7ohsJunu00w13rwA/psYGtmmzczLoa5XUWDbdBmXPiL2km/DAjfryV9R1Y6n+FaVR67REpHP8Ls3YbU3LVA4cj5rognIw5rWv4Oha4AAAA==",
+    "credit": {
+      "title": "GRC-2014-C-04823",
+      "photographer": null,
+      "center": "GRC",
+      "dateCreated": "2010-08-12T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2014-C-04823"
+    }
+  },
+  "uhb-fan": {
+    "nasaId": "GRC-2015-C-04208",
+    "width": 3000,
+    "height": 2250,
+    "variants": [
+      {
+        "file": "uhb-fan-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 51712
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAwBQCdASoYABIAPu1kqk2ppaQiMAgBMB2JZADCuUE88AnY362A8fNaS/fN+DEGtm6JWAD+8RHjbiNsjkJRlQRaDtFPb2k6MuRs8LKZyB/MxhsXYS6VjTVeO/SlH7xkuVBT4jajrpE6zmtKs2GSOAAA",
+    "credit": {
+      "title": "Ultra High Bypass Integrated System Test",
+      "photographer": null,
+      "center": "GRC",
+      "dateCreated": "2015-09-14T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2015-C-04208"
+    }
+  },
+  "uhb-fan-tunnel": {
+    "nasaId": "GRC-2015-C-04209",
+    "width": 5500,
+    "height": 4400,
+    "variants": [
+      {
+        "file": "uhb-fan-tunnel-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 51706
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAABwBQCdASoYABMAPu1iqE2ppaOiMBgMATAdiWQAsR+AgamgrpNSF8uyRGxEot0+QyLt4sYAAP65ItKdEz6ZMxMnbSTMAYZGrfvL0yppmvfM1CBqcQfYQ78ucXp6/9j54b5PVUpbh/IjbgayR9qABQQAAAA=",
+    "credit": {
+      "title": "Ultra High Bypass Ratio Turbofan model in the 9-by 15-Foot Low Speed Wind Tunnel",
+      "photographer": "NASA/GRC/BRIDGET CASWELL",
+      "center": "GRC",
+      "dateCreated": "2015-07-01T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2015-C-04209"
+    }
+  },
+  "psl-control-a": {
+    "nasaId": "GRC-2025-C-07467",
+    "width": 6000,
+    "height": 3435,
+    "variants": [
+      {
+        "file": "psl-control-a-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 106162
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAADQAwCdASoYAA4APu1qrU8ppiQiMAgBMB2JZwDE2B5moUrCARM5CHQA/tnxdPJP4pKTyCRB45ZA1bCUTQ2bwqVteU6aSl7e8hjmWAAA",
+    "credit": {
+      "title": "GRC-2025-C-07467",
+      "photographer": "Quentin Schwinn",
+      "center": "GRC",
+      "dateCreated": "2025-09-02T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2025-C-07467"
+    }
+  },
+  "psl-control-b": {
+    "nasaId": "GRC-2025-C-07466",
+    "width": 6000,
+    "height": 4000,
+    "variants": [
+      {
+        "file": "psl-control-b-1200.webp",
+        "width": 1200,
+        "format": "webp",
+        "bytes": 118932
+      }
+    ],
+    "placeholder": "data:image/webp;base64,UklGRlQAAABXRUJQVlA4IEgAAACwAwCdASoYABAAPu1iqU2ppaOiMAgBMB2JZwDE2CFsdTm8ZHZSAAD+7Ju21u5eh4bmLxeZbZfGRH6u3aRJp2AY/UAhJvsgAAA=",
+    "credit": {
+      "title": "GRC-2025-C-07466",
+      "photographer": "Quentin Schwinn",
+      "center": "GRC",
+      "dateCreated": "2025-09-02T00:00:00Z",
+      "source": "https://images.nasa.gov/details/GRC-2025-C-07466"
+    }
+  }
+}
