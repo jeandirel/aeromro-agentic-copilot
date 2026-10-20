@@ -4,7 +4,6 @@ import { lazy, useState } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router";
 import { ApiError } from "@/lib/api/client";
 import { useDocumentTitle } from "@/lib/hooks";
-import { ThemeProvider } from "@/lib/theme";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 
@@ -45,23 +44,21 @@ function NotFound() {
 export function App() {
   const [client] = useState(makeQueryClient);
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={client}>
-          <Tooltip.Provider delayDuration={250} skipDelayDuration={100}>
-            <BrowserRouter>
-              <Routes>
-                <Route element={<AppShell />}>
-                  <Route index element={<DashboardPage />} />
-                  <Route path="engines" element={<EnginesPage />} />
-                  <Route path="engines/:subset/:unit" element={<EnginesPage />} />
-                  <Route path="copilot" element={<CopilotPage />} />
-                  <Route path="audit" element={<AuditPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </Tooltip.Provider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={client}>
+      <Tooltip.Provider delayDuration={250} skipDelayDuration={100}>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="engines" element={<EnginesPage />} />
+              <Route path="engines/:subset/:unit" element={<EnginesPage />} />
+              <Route path="copilot" element={<CopilotPage />} />
+              <Route path="audit" element={<AuditPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </Tooltip.Provider>
+    </QueryClientProvider>
   );
 }

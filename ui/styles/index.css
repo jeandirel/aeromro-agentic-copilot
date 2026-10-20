@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Dark mode follows the data-theme attribute set by /theme-init.js and the theme menu. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 /*
  * AeroMRO design tokens.
  *
@@ -47,8 +44,7 @@
   color-scheme: light;
 }
 
-:root[data-theme="dark"],
-/* A dark surface inside the light theme (the fleet status band) reuses the dark tokens. */
+/* The console is light only. A dark surface inside it (the fleet status band) uses these tokens. */
 .scheme-dark {
   --canvas: #0b1520;
   --surface: #111e2b;

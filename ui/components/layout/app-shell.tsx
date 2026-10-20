@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton, Tip } from "@/components/ui/primitives";
 import { AboutDialog } from "./about-dialog";
 import { Brand } from "./brand";
-import { RefreshButton, SystemStatus, ThemeMenu } from "./system-status";
+import { RefreshButton, SystemStatus } from "./system-status";
 
 interface NavItem {
   to: string;
@@ -129,7 +129,6 @@ function TopBar() {
             <SystemStatus compact />
           </span>
           <RefreshButton />
-          <ThemeMenu />
           <span className="lg:hidden">
             <AboutDialog
               trigger={

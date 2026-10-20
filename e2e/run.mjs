@@ -253,19 +253,14 @@ await step("Gateway refusals", async () => {
 });
 
 await step("Theme", async () => {
+  // Light theme only: a phone or computer set to dark mode still gets the light console.
+  await page.emulateMedia({ colorScheme: "dark" });
   await page.goto(`${base}/`);
-  await page.getByRole("button", { name: "Choisir le thème d’affichage" }).click();
-  await page.getByRole("menuitemradio", { name: /Sombre/ }).click();
-  const theme = await page.evaluate(() => document.documentElement.dataset.theme);
-  check("Theme: dark theme applied and remembered", theme === "dark" && (await page.evaluate(() => localStorage.getItem("aeromro.theme"))) === "dark");
-  await page.locator("#rul-map svg circle").first().waitFor();
-  await page.screenshot({ path: `${artifacts}desktop-dashboard-dark.png`, fullPage: true });
-  await axe(page, "dashboard, dark theme");
-  if (engineUrl) {
-    await page.goto(engineUrl);
-    await page.locator(".recharts-surface").first().waitFor();
-    await page.screenshot({ path: `${artifacts}desktop-engine-dark.png`, fullPage: true });
-  }
+  await page.locator("#rul-map svg [data-engine]").first().waitFor();
+  const theme = await page.evaluate(() => [document.documentElement.dataset.theme, getComputedStyle(document.body).backgroundColor]);
+  const menu = await page.getByRole("button", { name: "Choisir le thème d’affichage" }).count();
+  check("Theme: light console even when the system prefers dark", theme[0] === "light" && theme[1] === "rgb(238, 241, 245)" && menu === 0, `${theme[1]}`);
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto(`${base}/route-inconnue`);
   check("Unknown route: explicit not-found page", await page.getByText("Cette page n’existe pas").isVisible());
 });

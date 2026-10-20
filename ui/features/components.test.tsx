@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { askResponseSchema } from "@/lib/api/schemas";
 import { copilotStore, type AnswerEntry } from "@/lib/copilot-store";
 import { SAMPLE_ASK, SAMPLE_ENGINE } from "@/test/fixtures";
-import { ThemeProvider } from "@/lib/theme";
 import { RulTape } from "@/components/instruments/rul-tape";
 import { AnswerCard, ErrorCard } from "./copilot/answer-card";
 import CopilotPage from "./copilot/copilot-page";
@@ -32,17 +31,15 @@ function answerEntry(overrides: Record<string, unknown> = {}): AnswerEntry {
 function wrap(ui: ReactNode, route = "/") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <ThemeProvider>
-      <QueryClientProvider client={client}>
-        <Tooltip.Provider>
-          <MemoryRouter initialEntries={[route]}>
-            <Routes>
-              <Route path="*" element={ui} />
-            </Routes>
-          </MemoryRouter>
-        </Tooltip.Provider>
-      </QueryClientProvider>
-    </ThemeProvider>,
+    <QueryClientProvider client={client}>
+      <Tooltip.Provider>
+        <MemoryRouter initialEntries={[route]}>
+          <Routes>
+            <Route path="*" element={ui} />
+          </Routes>
+        </MemoryRouter>
+      </Tooltip.Provider>
+    </QueryClientProvider>,
   );
 }
 

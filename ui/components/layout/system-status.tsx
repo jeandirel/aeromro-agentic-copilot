@@ -1,11 +1,10 @@
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
-import { DropdownMenu, Popover } from "radix-ui";
-import { Check, Monitor, Moon, RefreshCw, Sun } from "lucide-react";
+import { Popover } from "radix-ui";
+import { RefreshCw } from "lucide-react";
 import { useHealth } from "@/lib/api/queries";
 import { errorMessage } from "@/lib/api/client";
 import { milliseconds, timeAgo } from "@/lib/format";
 import { useNow } from "@/lib/hooks";
-import { useTheme, type ThemePreference } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tip } from "@/components/ui/primitives";
@@ -86,42 +85,3 @@ export function RefreshButton() {
   );
 }
 
-const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
-  { value: "light", label: "Clair (hangar)", icon: Sun },
-  { value: "dark", label: "Sombre (poste de pilotage)", icon: Moon },
-  { value: "system", label: "Selon le système", icon: Monitor },
-];
-
-export function ThemeMenu() {
-  const { preference, resolved, setPreference } = useTheme();
-  const Icon = resolved === "dark" ? Moon : Sun;
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Choisir le thème d’affichage">
-          <Icon aria-hidden="true" />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={8} className="z-50 min-w-56 rounded-md border border-line bg-surface p-1 shadow-pop">
-          <DropdownMenu.Label className="px-2 py-1.5 text-xs text-ink-3">Thème d’affichage</DropdownMenu.Label>
-          <DropdownMenu.RadioGroup value={preference} onValueChange={(v) => setPreference(v as ThemePreference)}>
-            {THEME_OPTIONS.map((o) => (
-              <DropdownMenu.RadioItem
-                key={o.value}
-                value={o.value}
-                className="flex cursor-default items-center gap-2 rounded-sm px-2 py-2 text-sm text-ink outline-none data-[highlighted]:bg-sunken"
-              >
-                <o.icon aria-hidden="true" className="size-4 text-ink-2" />
-                <span className="flex-1">{o.label}</span>
-                <DropdownMenu.ItemIndicator>
-                  <Check aria-hidden="true" className="size-4 text-policy" />
-                </DropdownMenu.ItemIndicator>
-              </DropdownMenu.RadioItem>
-            ))}
-          </DropdownMenu.RadioGroup>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-  );
-}
